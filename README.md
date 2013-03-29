@@ -14,3 +14,8 @@ Current state
 
 It's a proof of concept. I am using Qt 5.0.1 on windows, the MingW version.
 
+
+Download
+--------
+
+For a quick test drive, I will post download links on https://github.com/kaos/QtErl/wiki/Downloads.
