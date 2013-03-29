@@ -1,0 +1,7 @@
+#ifndef QTERL_COMMANDS_H
+#define QTERL_COMMANDS_H
+
+#define QTERL_LOAD_UI 0
+#define QTERL_CONNECT 1
+
+#endif // QTERL_COMMANDS_H
