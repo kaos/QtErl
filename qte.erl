@@ -1,6 +1,71 @@
 -module(qte).
--export([start/1, stop/1, connect/3]).
+
+%% API exports
+-export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3]).
+
+%% Test exports
 -export([t/0, t2/0]).
+
+
+-type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
+-type start_rsp() :: {load_rsp(), pid()} | stop.
+-type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
+
+-spec start() -> start_rsp().
+-spec start(Ui::string()) -> start_rsp().
+-spec stop(pid()) -> stop.
+-spec load_ui(pid(), Ui::string()) -> load_rsp().
+-spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
+-spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
+
+
+%% ------------------------------------
+%%               API
+%% ------------------------------------
+
+%% spawn new QtErl port driver
+start() -> start([]).
+
+%% spawn new QtErl port driver and load ui from file (or xml string)
+start(Ui) when is_list(Ui) ->
+  case erl_ddll:load(".", "QtErl") of
+    ok -> ok;
+    {error, already_loaded} -> ok;
+    E -> exit({error, {qte, could_not_load, E}})
+  end,
+  Self = self(),
+  Pid = spawn_link(fun() -> init(Self, Ui) end),
+  receive
+    {Pid, {start, Rsp}} -> {Rsp, Pid}
+  after
+    2000 -> stop(Pid)
+  end.
+
+%% stop driver
+stop(P) when is_pid(P) ->
+  P ! stop.
+
+%% load ui
+load_ui(Pid, Ui) -> load_ui(Pid, Ui, []).
+load_ui(Pid, Ui, Parent)
+  when is_pid(Pid), is_list(Ui), is_list(Parent) ->
+  Pid ! {self(), load_ui, {Parent, Ui}},
+  receive
+    {Pid, Res} -> Res
+  end.
+
+%% connect to signal
+connect(Pid, Name, Signal)
+  when is_pid(Pid), is_list(Name), is_list(Signal) ->
+  Pid ! {self(), connect, {Name, Signal}},
+  receive
+    {Pid, Res} -> Res
+  end.
+
+
+%% ------------------------------------
+%%          Implementation
+%% ------------------------------------
 
 -define(QTE_LOAD_UI, 0).
 -define(QTE_CONNECT, 1).
@@ -10,33 +75,6 @@
   refs=[]
 }).
 
-%% spawn new QtErl port driver and load ui from file
--spec(start(Filename::string()) -> pid()).
-start(Filename) when is_list(Filename) ->
-  case erl_ddll:load(".", "QtErl") of
-    ok -> ok;
-    {error, already_loaded} -> ok;
-    E -> exit({error, {qte, could_not_load, E}})
-  end,
-  Self = self(),
-  Pid = spawn_link(fun() -> init(Self, Filename) end),
-  receive
-    {Pid, {start, Rsp}} -> {Rsp, Pid}
-  after
-    2000 -> stop(Pid)
-  end.
-
-%%
-stop(P) when is_pid(P) ->
-  P ! stop.
-
-%%
-connect(Pid, Name, Signal)
-  when is_pid(Pid), is_list(Name), is_list(Signal) ->
-  Pid ! {self(), connect, {Name, Signal}},
-  receive
-    {Pid, Res} -> Res
-  end.
 
 %% open port and enter loop
 init(Pid, Filename) ->
@@ -48,8 +86,11 @@ init(Pid, Filename) ->
   end,
   loop(#state{ port=Port }).
 
+%% main QtErl port driver loop
 loop(#state{ port=Port }=State) ->
   receive
+    {Pid, load_ui, What} ->
+      loop(do_load_ui(Pid, What, State));
     {Pid, connect, What} ->
       loop(do_connect(Pid, What, State));
     stop ->
@@ -71,6 +112,7 @@ loop(#state{ port=Port }=State) ->
       loop(State)
   end.
 
+%%
 control(Port, Command, Data) ->
   Ref = make_ref(),
   <<>> = erlang:port_control(Port, Command, term_to_binary({Ref, Data})),
@@ -80,6 +122,18 @@ control(Port, Command, Data) ->
     1000 -> timeout
   end.
 
+%%
+do_load_ui(Pid, What, #state{ port=Port }=State) ->
+  case control(Port, ?QTE_LOAD_UI, What) of
+    {_Ref, Rsp} ->
+      Pid ! {self(), Rsp},
+      State;
+    Else ->
+      Pid ! {self(), Else},
+      State
+  end.
+
+%%
 do_connect(Pid, What, #state{ port=Port }=State) ->
   case control(Port, ?QTE_CONNECT, What) of
     {Ref, Rsp} ->
@@ -92,7 +146,9 @@ do_connect(Pid, What, #state{ port=Port }=State) ->
   end.
 
 
-%% test
+%%%%%%%%%%
+%% test %%
+
 t() ->
   {Rsp, P} = start("test.ui"),
   io:format("t: start = ~p~n", [Rsp]),

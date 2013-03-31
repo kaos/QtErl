@@ -176,7 +176,7 @@ static ErlDrvData qte_start(ErlDrvPort port, char *command)
   if (p++ && *p)
     q->postLoadUI(state, p);
   else
-    QTE_REF_SEND(state, state->ref, "ok");
+    QTE_REF_SEND(state, state->ref, "{ok, []}");
 
   QTE_CLOSE_REF(state);
   return (ErlDrvData)state;
@@ -231,6 +231,11 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
                                 char **rbuf, ErlDrvSizeT rlen)
 {
   (void)len; (void)rlen;
+  int pos = 0;
+  int arity;
+  char name[128];
+
+  erlang_ref ref;
   qte_state_t state = (qte_state_t) drv_data;
 
   int ret = 1;
@@ -239,50 +244,88 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
   switch (command)
   {
     case QTERL_LOAD_UI:
-      (*rbuf)[ret]++;
-      break;
-
-    case QTERL_CONNECT:
       {
-        int pos = 0;
-        int arity;
-        char name[128];
-        char signal[64];
-        erlang_ref ref;
+        char data[128];
 
-        // {#Ref, {Name, Signal}}
+        // {#Ref, {ParentName, Data}}
 
+        // version
         (*rbuf)[ret]++;
         if (ei_decode_version(buf, &pos, NULL))
           break;
-
+        // {
         (*rbuf)[ret]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
-
+        // #Ref
         (*rbuf)[ret]++;
         if (ei_decode_ref(buf, &pos, &ref))
           break;
 
         QTE_OPEN_EREF(state, &ref);
-
+        // {
         (*rbuf)[ret]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
-
+        // ParentName, hint: "" = top level widget
         (*rbuf)[ret]++;
         if (qte_decode_string(buf, &pos, name, sizeof(name)))
           break;
-
+        // Data
         (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, signal, sizeof(signal)))
+        if (qte_decode_string(buf, &pos, data, sizeof(data)))
           break;
+        // } }
 
         (*rbuf)[ret]++;
         QtErl *q = QtErl_Instance();
         if (!q)
           break;
+        // post load ui event to main Qt thread
+        q->postLoadUI(state, data); // todo: lookup parent widget
+        ret = 0;
+        break;
+      }
 
+    case QTERL_CONNECT:
+      {
+        char signal[64];
+
+        // {#Ref, {Name, Signal}}
+
+        // version
+        (*rbuf)[ret]++;
+        if (ei_decode_version(buf, &pos, NULL))
+          break;
+        // {
+        (*rbuf)[ret]++;
+        if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
+          break;
+        // #Ref
+        (*rbuf)[ret]++;
+        if (ei_decode_ref(buf, &pos, &ref))
+          break;
+
+        QTE_OPEN_EREF(state, &ref);
+        // {
+        (*rbuf)[ret]++;
+        if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
+          break;
+        // Name
+        (*rbuf)[ret]++;
+        if (qte_decode_string(buf, &pos, name, sizeof(name)))
+          break;
+        // Signal
+        (*rbuf)[ret]++;
+        if (qte_decode_string(buf, &pos, signal, sizeof(signal)))
+          break;
+        // } }
+
+        (*rbuf)[ret]++;
+        QtErl *q = QtErl_Instance();
+        if (!q)
+          break;
+        // post connect event to main Qt thread
         q->postConnect(state, name, signal);
         ret = 0;
         break;

@@ -55,11 +55,13 @@ class QteLoadUIEvent : public QteEvent
   Q_GADGET
 
 public:
-  explicit QteLoadUIEvent(qte_state_t, const char *);
+  explicit QteLoadUIEvent(qte_state_t, const char *, QWidget *parent = 0);
   ~QteLoadUIEvent();
-  QIODevice *IODevice() { return io; }
+  QWidget *getParent() { return p; }
+  QIODevice *getIODevice() { return io; }
 
 private:
+  QWidget *p;
   QIODevice *io;
 };
 

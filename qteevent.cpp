@@ -41,8 +41,8 @@ QEvent::Type QteEvent::QteEventType()
 }
 
 /* QteLoadUIEvent */
-QteLoadUIEvent::QteLoadUIEvent(qte_state_t state, const char *src)
-  : QteEvent(LoadUI, state)
+QteLoadUIEvent::QteLoadUIEvent(qte_state_t state, const char *src, QWidget *parent)
+  : QteEvent(LoadUI, state), p(parent)
 {
   // detect xml string data
   if ('<' == *src)

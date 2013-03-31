@@ -14,7 +14,7 @@ QteConnection::QteConnection(QteEvent *event, QObject *sender, const char *signa
   if (ok)
     QTE_SR_SEND(
           sr,
-          "{connected,~s,~s}",
+          "{ok,~s,~s}",
           sender->objectName().toLocal8Bit().constData(),
           sig_name.toLocal8Bit().constData());
 }

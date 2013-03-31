@@ -51,11 +51,11 @@ bool QtErl::event(QEvent *event)
   return true;
 }
 
-void QtErl::postLoadUI(qte_state_t state, const char *FileName)
+void QtErl::postLoadUI(qte_state_t state, const char *FileName, QWidget *parent)
 {
   QApplication::instance()->postEvent(
         this, new QteLoadUIEvent(
-          state, FileName));
+          state, FileName, parent));
 }
 
 void QtErl::postConnect(qte_state_t state, const char *name, const char *signal)
@@ -71,7 +71,7 @@ void QtErl::loadUI(QteLoadUIEvent *event)
   QUiLoader loader;
   qte_state_t state = event->getQteStateRef().getQteState();
 
-  w = loader.load(event->IODevice());
+  w = loader.load(event->getIODevice(), event->getParent());
   if (!w)
   {
     QTE_SR_SEND(
@@ -85,10 +85,13 @@ void QtErl::loadUI(QteLoadUIEvent *event)
   // drop this? might wanna create it hidden, and show it later
   w->show();
 
-  root.insert(state, w);
+  // top-level widget?
+  if (!event->getParent())
+    root.insert(state, w);
+
   QTE_SR_SEND(
         event->getQteStateRef(),
-        "{loaded,~s}",
+        "{ok,~s}",
         w->objectName().toLocal8Bit().constData());
 }
 
@@ -111,13 +114,14 @@ void QtErl::connect(QteConnectEvent *event)
       if (!c->getOk())
         delete c;
       else
+        // connected message sent by qte connection when ok
         return;
     }
   }
 
   QTE_SR_SEND(
         event->getQteStateRef(),
-        "{connect_failed,~s,~s}",
+        "{error,~s,~s}",
         name.toLocal8Bit().constData(),
         event->getSignal().toLocal8Bit().constData());
 }

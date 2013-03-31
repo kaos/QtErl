@@ -18,7 +18,7 @@ public:
   explicit QtErl(QObject *parent = 0);
   bool event(QEvent *event);
   void clear(qte_state_t state);
-  void postLoadUI(qte_state_t state, const char *FileName);
+  void postLoadUI(qte_state_t state, const char *FileName, QWidget *parent = 0);
   void postConnect(qte_state_t state, const char *name, const char *signal);
 
 signals:
