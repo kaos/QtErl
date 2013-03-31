@@ -73,7 +73,7 @@ load_ui/2
 -spec load_ui(pid(), Ui::string()) -> load_rsp().
 ```
 
-Load user interface. The Ui argument should point to the user interface description in (Qt XML format)[http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html],
+Load user interface. The Ui argument should point to the user interface description in [Qt XML format](http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html),
 either as a filename or directly as string data. (see `qte:t/0` and `qte:t2/0`).
 
 
