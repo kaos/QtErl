@@ -15,12 +15,14 @@
 %%
 
 -module(qte).
+-include("qte_xml.hrl").
 
 %% API exports
--export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3]).
+-export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3, compile/1]).
 
 %% Test exports
 -export([t/0, t2/0, t3/0]).
+
 
 
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
@@ -33,6 +35,7 @@
 -spec load_ui(pid(), Ui::string()) -> load_rsp().
 -spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
 -spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
+-spec compile(#ui{}) -> string().
 
 
 %% ------------------------------------
@@ -77,6 +80,10 @@ connect(Pid, Name, Signal)
   receive
     {Pid, Res} -> Res
   end.
+
+%% compile user interface defintion to Qt XML format
+compile(Ui) when is_record(Ui, ui) ->
+  qte_xml:compile(Ui).
 
 
 %% ------------------------------------

@@ -38,6 +38,7 @@ API
 
 A brief description of the QtErl API, as it stands right now.
 
+
 Types
 -----
 
@@ -47,8 +48,37 @@ Types
 -type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
 ```
 
-start/0
--------
+From `qte_xml.hrl` for compiling user interfaces to the Qt XML UI format with `qte:compile/1`.
+
+```erlang
+-record(attribute, {
+  name :: string() | atom(),
+  value :: [#attribute{}] | string() | number() | atom()
+}).
+
+-record(property, {
+  name :: string() | atom(),
+  attributes=[] :: [#attribute{}]
+}).
+
+-record(widget, {
+  class :: string() | atom(),
+  name :: string() | atom(),
+  properties=[] :: [#property{}],
+  children=[] :: [#widget{}]
+}).
+
+-record(ui, {
+  version="4.0" :: string(),
+  widgets=[] :: [#widget{}],
+  resources=[] :: list(),   %% not yet specified
+  connections=[] :: list()  %%     -"- nor tested
+}).
+```
+
+
+qte:start/0
+-----------
 
 ```erlang
 -spec start() -> start_rsp().
@@ -57,8 +87,8 @@ start/0
 Load the QtErl dynamic library (.dll/.so) and start a port driver process.
 
 
-start/1
--------
+qte:start/1
+-----------
 
 ```erlang
 -spec start(Ui::string()) -> start_rsp().
@@ -68,8 +98,8 @@ Load the QtErl dynamic library (.dll/.so) and start a port driver process.
 During port driver start, also loads the requested user interface.
 
 
-stop/1
-------
+qte:stop/1
+----------
 
 ```erlang
 -spec stop(pid()) -> stop.
@@ -78,8 +108,8 @@ stop/1
 Stop port driver process, closing any open windows loaded from this process.
 
 
-load_ui/2
----------
+qte:load_ui/2
+-------------
 
 ```erlang
 -spec load_ui(pid(), Ui::string()) -> load_rsp().
@@ -88,9 +118,11 @@ load_ui/2
 Load user interface. The Ui argument should point to the user interface description in [Qt XML format](http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html),
 either as a filename or directly as string data. (see `qte:t/0` and `qte:t2/0`).
 
+Todo: support `Ui::#ui{}` with the new `compile/1` fun.
 
-load_ui/3
----------
+
+qte:load_ui/3
+-------------
 
 ```erlang
 -spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
@@ -101,9 +133,11 @@ Load user interface with given parent.
 **Note** I have not yet figured out how to get the newly loaded parent widget into its correct position.
 When running `qte:t3()` the loaded `centralWidget2` gets postion `0,0` thus overlapping the already existing widgets.
 
+Todo: support `Ui::#ui{}` with the new `compile/1` fun.
 
-connect/3
----------
+
+qte:connect/3
+-------------
 
 ```erlang
 -spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
@@ -112,3 +146,13 @@ connect/3
 Connect to a widget signal. When a connected signal is emitted, it is sent as a message to the process that called `qte:connect/3`.
 `Name` to be defined. It will support a path like specification to target specific widget(s) unambigously.
 `Signal` should match the string you would put into the Qt `SIGNAL` macro. E.g. `"clicked()"` or `"textChanged(QString)"` etc.
+
+
+qte:compile/1
+-------------
+
+```erlang
+-spec compile(Ui::#ui{}) -> string().
+```
+
+Take a user interface struct and compile it to the XML format understood by the Qt form builder.
