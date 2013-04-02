@@ -26,11 +26,12 @@ For a quick test drive, I will post download links on https://github.com/kaos/Qt
 TODO
 ----
 
-* Restructure into an Erlang application.
+* Restructure into an Erlang application. /in progress/
 * Make it portable. Should be able to build and run on Windows/Linux/Mac OS (and preferably on BSD and Solaris flavours too, if those platforms are supported by Qt, that is).
 * Tests. Should have unit tests.
 * Documenatation, and more documentation. Examples. Tutorials.
 * Get more people involved (Hey, this bullet is for YOU :p)
+* Trigger widget slots.
 
 
 API
