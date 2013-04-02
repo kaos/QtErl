@@ -77,7 +77,7 @@ Types
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
 -type start_rsp() :: {load_rsp(), pid()} | stop.
 -type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
--type ui() :: string() | #ui{}.
+-type ui() :: #ui{} | string() | filename().
 ```
 
 From `qte_xml.hrl` for compiling user interfaces to the Qt XML UI format with `qte:compile/1`.
@@ -147,10 +147,9 @@ qte:load_ui/2
 -spec load_ui(pid(), ui()) -> load_rsp().
 ```
 
-Load user interface. The Ui argument should point to the user interface description in [Qt XML format](http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html),
+Load user interface. The Ui argument is either a `#ui{}` record describing the widgets to load,
+or it points to the user interface description in [Qt XML format](http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html),
 either as a filename or directly as string data. (see `qte:t/0` and `qte:t2/0`).
-
-Todo: support `Ui::#ui{}` with the new `compile/1` fun.
 
 
 qte:load_ui/3
@@ -164,8 +163,6 @@ Load user interface with given parent.
 
 **Note** I have not yet figured out how to get the newly loaded parent widget into its correct position.
 When running `qte:t3()` the loaded `centralWidget2` gets postion `0,0` thus overlapping the already existing widgets.
-
-Todo: support `Ui::#ui{}` with the new `compile/1` fun.
 
 
 qte:connect/3
