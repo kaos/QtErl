@@ -26,12 +26,40 @@ For a quick test drive, I will post download links on https://github.com/kaos/Qt
 TODO
 ----
 
-* Restructure into an Erlang application. /in progress/
 * Make it portable. Should be able to build and run on Windows/Linux/Mac OS (and preferably on BSD and Solaris flavours too, if those platforms are supported by Qt, that is).
 * Tests. Should have unit tests.
 * Documenatation, and more documentation. Examples. Tutorials.
 * Get more people involved (Hey, this bullet is for YOU :p)
 * Trigger widget slots.
+* `[done]` Restructure into an Erlang application.
+
+
+Building
+========
+
+To build QtErl, use a Gnu compatible make (or test if your preferred flavour of make works).
+
+What you need:
+
+- Make
+    Tested with: GNU Make 3.81
+- QMake
+    Tested with: QMake version 3.0
+    Using Qt version 5.0.1 in D:\Qt\Qt5.0.1\5.0.1\mingw47_32\lib
+- Erlang (obviously)
+    Tested with: Erlang R15B03 (erts-5.9.3.1) (I had issues with loading the dll on R16B).
+
+Simply `make all` in the project root dir. It should build QtErl.dll and beam files.
+Run `werl -pa ebin` to start a new erlang window. To load the `priv/test.ui` file, you can issue `qte:t().`.
+
+Qt need a few (ok, a lot) of binaries to be found, so make sure they are on your path.
+Building in a "Qt shell" makes sure your path is setup correctly.
+
+I have `D:\Qt\5.0.1\mingw47_32\bin` and `D:\Qt\5.0.1\Tools\MinGW\bin` on my path.
+
+If you are not using the mingw version of Qt, you may need to override the QMAKE_SPEC variable.
+
+Building on other systems than windows is thus far not attempted. Patches welcome! :)
 
 
 API
