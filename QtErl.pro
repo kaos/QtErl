@@ -33,7 +33,9 @@ unix:!symbian {
 OTHER_FILES += \
     qte.erl \
     README.md \
-    LICENSE
+    LICENSE \
+    qte_xml.erl \
+    qte_xml.hrl
 
 
 win32: INCLUDEPATH += $$PWD/../../../../erl/5.9.3.1/erts-5.9.3.1/include
