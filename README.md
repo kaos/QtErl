@@ -77,6 +77,7 @@ Types
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
 -type start_rsp() :: {load_rsp(), pid()} | stop.
 -type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
+-type ui() :: string() | #ui{}.
 ```
 
 From `qte_xml.hrl` for compiling user interfaces to the Qt XML UI format with `qte:compile/1`.
@@ -122,7 +123,7 @@ qte:start/1
 -----------
 
 ```erlang
--spec start(Ui::string()) -> start_rsp().
+-spec start(ui()) -> start_rsp().
 ```
 
 Load the QtErl dynamic library (.dll/.so) and start a port driver process.
@@ -143,7 +144,7 @@ qte:load_ui/2
 -------------
 
 ```erlang
--spec load_ui(pid(), Ui::string()) -> load_rsp().
+-spec load_ui(pid(), ui()) -> load_rsp().
 ```
 
 Load user interface. The Ui argument should point to the user interface description in [Qt XML format](http://qt-project.org/doc/qt-4.8/designer-ui-file-format.html),
@@ -156,7 +157,7 @@ qte:load_ui/3
 -------------
 
 ```erlang
--spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
+-spec load_ui(pid(), ui(), Parent::string()) -> load_rsp().
 ```
 
 Load user interface with given parent.
@@ -183,7 +184,7 @@ qte:compile/1
 -------------
 
 ```erlang
--spec compile(Ui::#ui{}) -> string().
+-spec compile(#ui{}) -> string().
 ```
 
 Take a user interface struct and compile it to the XML format understood by the Qt form builder.
