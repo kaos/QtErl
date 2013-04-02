@@ -49,6 +49,8 @@ What you need:
 - Erlang (obviously)
     Tested with: Erlang R15B03 (erts-5.9.3.1) (I had issues with loading the dll on R16B).
 
+** For now, you need to tweak `QtErl.pro` to point to where you have erlang installed. **
+
 Simply `make all` in the project root dir. It should build QtErl.dll and beam files.
 Run `werl -pa ebin` to start a new erlang window. To load the `priv/test.ui` file, you can issue `qte:t().`.
 

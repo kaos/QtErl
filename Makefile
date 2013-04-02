@@ -1,3 +1,5 @@
+ERL = erl
+
 QMAKE = qmake
 QMAKE_SPEC = win32-g++
 
@@ -26,4 +28,4 @@ priv/c_objs/Makefile: QtErl.pro
 .PHONY: ebin
 ebin: $(wildcard src/*.erl) $(wildcard include/*.hrl)
 	@mkdir -p ebin
-	@erl -make
+	@$(ERL) -make
