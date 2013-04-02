@@ -243,6 +243,9 @@ static int qte_decode_string(char *buf, int *index, char **dst)
 
   ei_get_type(buf, index, &type, &size);
 
+  if (!size)
+    return ei_skip_term(buf, index);
+
   if (type != ERL_STRING_EXT)
     return -1;
 
@@ -264,7 +267,7 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
   qte_state_t state = (qte_state_t) drv_data;
 
   int ret = 1;
-  (*rbuf)[ret] = '0';
+  (*rbuf)[ret - 1] = '0';
   name = signal = data = NULL;
 
   switch (command)
@@ -274,39 +277,39 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
         // {#Ref, {ParentName, Data}}
 
         // version
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_version(buf, &pos, NULL))
           break;
         // {
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
         // #Ref
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_ref(buf, &pos, &ref))
           break;
 
         QTE_OPEN_EREF(state, &ref);
         // {
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
         // ParentName, hint: "" = top level widget
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (qte_decode_string(buf, &pos, &name))
           break;
         // Data
-        (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, &data))
+        (*rbuf)[ret - 1]++;
+        if (qte_decode_string(buf, &pos, &data) || !data)
           break;
         // } }
 
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         QtErl *q = QtErl_Instance();
         if (!q)
           break;
         // post load ui event to main Qt thread
-        q->postLoadUI(state, data, q->findWidget(state, name));
+        q->postLoadUI(state, data, name ? q->findWidget(state, name) : NULL);
         ret = 0;
         break;
       }
@@ -316,34 +319,34 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
         // {#Ref, {Name, Signal}}
 
         // version
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_version(buf, &pos, NULL))
           break;
         // {
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
         // #Ref
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_ref(buf, &pos, &ref))
           break;
 
         QTE_OPEN_EREF(state, &ref);
         // {
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
         // Name
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (qte_decode_string(buf, &pos, &name))
           break;
         // Signal
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         if (qte_decode_string(buf, &pos, &signal))
           break;
         // } }
 
-        (*rbuf)[ret]++;
+        (*rbuf)[ret - 1]++;
         QtErl *q = QtErl_Instance();
         if (!q)
           break;
@@ -354,7 +357,7 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
       }
 
     default:
-      (*rbuf)[++ret] = (char)command;
+      (*rbuf)[ret++] = (char)command;
       break;
   }
 

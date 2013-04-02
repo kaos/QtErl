@@ -21,19 +21,20 @@
 -export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3, compile/1]).
 
 %% Test exports
--export([t/0, t2/0, t3/0]).
+-export([t/0, t2/0, t3/0, t4/0]).
 
 
 
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
 -type start_rsp() :: {load_rsp(), pid()} | stop.
 -type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
+-type ui() :: string() | #ui{}.
 
 -spec start() -> start_rsp().
--spec start(Ui::string()) -> start_rsp().
+-spec start(ui()) -> start_rsp().
 -spec stop(pid()) -> stop.
--spec load_ui(pid(), Ui::string()) -> load_rsp().
--spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
+-spec load_ui(pid(), ui()) -> load_rsp().
+-spec load_ui(pid(), ui(), Parent::string()) -> load_rsp().
 -spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
 -spec compile(#ui{}) -> string().
 
@@ -58,20 +59,27 @@ start(Ui) when is_list(Ui) ->
     {Pid, {start, Rsp}} -> {Rsp, Pid}
   after
     2000 -> stop(Pid)
-  end.
+  end;
+start(Ui) when is_record(Ui, ui) ->
+  start(compile(Ui)).
 
 %% stop driver
 stop(P) when is_pid(P) ->
   P ! stop.
 
 %% load ui
-load_ui(Pid, Ui) -> load_ui(Pid, Ui, []).
+load_ui(Pid, Ui) ->
+  load_ui(Pid, Ui, []).
+
 load_ui(Pid, Ui, Parent)
   when is_pid(Pid), is_list(Ui), is_list(Parent) ->
   Pid ! {self(), load_ui, {Parent, Ui}},
   receive
     {Pid, Res} -> Res
-  end.
+  end;
+load_ui(Pid, Ui, Parent) when is_record(Ui, ui) ->
+  load_ui(Pid, compile(Ui), Parent).
+
 
 %% connect to signal
 connect(Pid, Name, Signal)
@@ -138,11 +146,16 @@ loop(#state{ port=Port }=State) ->
 %%
 control(Port, Command, Data) ->
   Ref = make_ref(),
-  <<>> = erlang:port_control(Port, Command, term_to_binary({Ref, Data})),
-  receive
-    {Ref, _}=Rsp -> Rsp
-  after
-    1000 -> timeout
+  case erlang:port_control(Port, Command, term_to_binary({Ref, Data})) of
+    <<>> ->
+      receive
+        {Ref, _}=Rsp -> Rsp
+      after
+        1000 -> timeout
+      end;
+    Err ->
+      io:format("qte command failed: ~p, ~p~nstack: ~p~n", [Err, Data, erlang:get_stacktrace()]),
+      failed
   end.
 
 %%
@@ -197,6 +210,76 @@ t3() ->
   P = t2(),
   R = load_ui(P, extra_ui(), "centralWidget"),
   io:format("t: load_ui = ~p~n", [R]),
+  P.
+
+t4() ->
+  {Rstart, P} = start(),
+  io:format("t: start = ~p~n", [Rstart]),
+  Rload = load_ui(P,
+    #ui{
+      widgets=[
+        #widget{
+          class="QMainWindow",
+          name="MainWindow",
+          properties=[
+            #property{ name=geometry, attributes=[
+              #attribute{ name=rect, value=[
+                #attribute{ name=x, value=0 },
+                #attribute{ name=y, value=0 },
+                #attribute{ name=width, value=456 },
+                #attribute{ name=height, value=462 }]}
+              ]},
+            #property{ name="windowTitle", attributes=[
+              #attribute{ name=string, value="QtErl Test Window" }]}
+          ],
+          children=[
+            #widget{ class="QWidget", name="centralWidget",
+              children=[
+                #widget{ class="QPushButton", name="pushButton",
+                  properties=[
+                    #property{ name="geometry", attributes=[
+                      #attribute{ name=rect, value=[
+                        #attribute{ name=x, value=150 },
+                        #attribute{ name=y, value=30 },
+                        #attribute{ name=width, value=75 },
+                        #attribute{ name=height, value=23 }]}
+                      ]},
+                    #property{ name="text", attributes=[
+                      #attribute{ name=string, value="Clear" }]}
+                  ]
+                },
+                #widget{ class="QLabel", name="label",
+                  properties=[
+                    #property{ name="geometry", attributes=[
+                      #attribute{ name=rect, value=[
+                        #attribute{ name=x, value=20 },
+                        #attribute{ name=y, value=10 },
+                        #attribute{ name=width, value=201 },
+                        #attribute{ name=height, value=16 }]}
+                      ]},
+                    #property{ name="text", attributes=[
+                      #attribute{ name=string, value="TextLabel" }]}
+                  ]
+                },
+                #widget{ class="QLineEdit", name="lineEdit",
+                  properties=[
+                    #property{ name="geometry", attributes=[
+                      #attribute{ name=rect, value=[
+                        #attribute{ name=x, value=20 },
+                        #attribute{ name=y, value=30 },
+                        #attribute{ name=width, value=113 },
+                        #attribute{ name=height, value=20 }]}
+                      ]}
+                  ]
+                } % lineEdit
+              ] % centralWidget.children
+            } % centralWidget
+          ] % MainWindow.children
+        } % MainWindow
+    ]}), % widgets, ui
+  io:format("t: load_ui = ~p~n", [Rload]),
+  Rconnect = connect(P, "pushButton", "clicked()"),
+  io:format("t: connect = ~p~n", [Rconnect]),
   P.
 
 extra_ui() ->

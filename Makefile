@@ -16,7 +16,7 @@ lib: priv/$(QTERL_LIB)
 priv/$(QTERL_LIB): priv/c_objs/$(QTERL_LIB_TARGET)/$(QTERL_LIB)
 	@cp $< $@
 
-priv/c_objs/$(QTERL_LIB_TARGET)/$(QTERL_LIB): priv/c_objs/Makefile.$(QTERL_LIB_TARGET)
+priv/c_objs/$(QTERL_LIB_TARGET)/$(QTERL_LIB): priv/c_objs/Makefile.$(QTERL_LIB_TARGET) $(wildcard c_src/*)
 	@$(MAKE) -C $(dir $<) $(QTERL_LIB_TARGET)
 
 priv/c_objs/Makefile.$(QTERL_LIB_TARGET): priv/c_objs/Makefile

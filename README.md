@@ -2,7 +2,7 @@ QtErl
 =====
 
 QtErl is a library for building erlang applications with support for graphical
-user interface using the Qt framework.
+user interface using the [Qt framework](http://qt-project.org/).
 
 QtErl is still in its infancy, exploring suitable API's and design desicions.
 It is too early for real adoption, but it is excellent time to get involved
