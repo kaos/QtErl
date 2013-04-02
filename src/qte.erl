@@ -47,7 +47,7 @@ start() -> start([]).
 
 %% spawn new QtErl port driver and load ui from file (or xml string)
 start(Ui) when is_list(Ui) ->
-  case erl_ddll:load(".", "QtErl") of
+  case erl_ddll:load(priv(), "QtErl") of
     ok -> ok;
     {error, already_loaded} -> ok;
     E -> exit({error, {qte, could_not_load, E}})
@@ -168,12 +168,19 @@ do_connect(Pid, What, #state{ port=Port }=State) ->
       State
   end.
 
+%%
+priv() -> priv("").
+priv(File) ->
+  filename:join([
+    filename:dirname(code:which(?MODULE)),
+    "..", "priv", File]).
+
 
 %%%%%%%%%%
 %% test %%
 
 t() ->
-  {Rsp, P} = start("test.ui"),
+  {Rsp, P} = start(priv("test.ui")),
   io:format("t: start = ~p~n", [Rsp]),
   R = connect(P, "pushButton", "clicked()"),
   io:format("t: connect = ~p~n", [R]),

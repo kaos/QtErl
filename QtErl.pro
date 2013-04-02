@@ -37,7 +37,9 @@ OTHER_FILES += \
     LICENSE \
     src/qte.erl \
     src/qte_xml.erl \
-    include/qte_xml.hrl
+    include/qte_xml.hrl \
+    Makefile \
+    Emakefile
 
 
 win32: INCLUDEPATH += $$PWD/../../../../erl/5.9.3.1/erts-5.9.3.1/include
