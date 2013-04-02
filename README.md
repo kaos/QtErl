@@ -8,6 +8,8 @@ QtErl is still in its infancy, exploring suitable API's and design desicions.
 It is too early for real adoption, but it is excellent time to get involved
 if you care to influence the future direction of the project.
 
+Released under the apache license, version 2.0.
+
 
 Current state
 -------------
