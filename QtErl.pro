@@ -10,16 +10,18 @@ QT += widgets uitools
 
 DEFINES += QTERL_LIBRARY
 
-SOURCES += qterl.cpp \
-    qterl_drv.cpp \
-    qteevent.cpp \
-    qteconnection.cpp
+SOURCES += \
+    c_src/qteconnection.cpp \
+    c_src/qteevent.cpp \
+    c_src/qterl.cpp \
+    c_src/qterl_drv.cpp
 
-HEADERS += qterl.h \
-    qteevent.h \
-    qteconnection.h \
-    qterl_commands.h \
-    qterl_drv.h
+HEADERS += \
+    c_src/qteconnection.h \
+    c_src/qteevent.h \
+    c_src/qterl.h \
+    c_src/qterl_commands.h \
+    c_src/qterl_drv.h
 
 unix:!symbian {
     maemo5 {
@@ -31,11 +33,11 @@ unix:!symbian {
 }
 
 OTHER_FILES += \
-    qte.erl \
     README.md \
     LICENSE \
-    qte_xml.erl \
-    qte_xml.hrl
+    src/qte.erl \
+    src/qte_xml.erl \
+    include/qte_xml.hrl
 
 
 win32: INCLUDEPATH += $$PWD/../../../../erl/5.9.3.1/erts-5.9.3.1/include
