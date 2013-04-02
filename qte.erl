@@ -20,7 +20,7 @@
 -export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3]).
 
 %% Test exports
--export([t/0, t2/0]).
+-export([t/0, t2/0, t3/0]).
 
 
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
@@ -179,28 +179,84 @@ t2() ->
   io:format("t: connect = ~p~n", [R]),
   P.
 
+t3() ->
+  P = t2(),
+  R = load_ui(P, extra_ui(), "centralWidget"),
+  io:format("t: load_ui = ~p~n", [R]),
+  P.
+
+extra_ui() ->
+"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<ui version=\"4.0\">
+<widget class=\"QWidget\" name=\"centralWidget2\">
+<property name=\"geometry\">
+ <rect>
+  <x>20</x>
+  <y>60</y>
+  <width>421</width>
+  <height>341</height>
+ </rect>
+</property>
+<widget class=\"QPlainTextEdit\" name=\"plainTextEdit\">
+ <property name=\"geometry\">
+  <rect>
+   <x>0</x>
+   <y>30</y>
+   <width>411</width>
+   <height>301</height>
+  </rect>
+ </property>
+</widget>
+<widget class=\"QRadioButton\" name=\"rbTopLevel\">
+ <property name=\"geometry\">
+  <rect>
+   <x>0</x>
+   <y>0</y>
+   <width>111</width>
+   <height>17</height>
+  </rect>
+ </property>
+ <property name=\"text\">
+  <string>Top level widgets</string>
+ </property>
+</widget>
+<widget class=\"QRadioButton\" name=\"rbAll\">
+ <property name=\"geometry\">
+  <rect>
+   <x>130</x>
+   <y>0</y>
+   <width>121</width>
+   <height>17</height>
+  </rect>
+ </property>
+ <property name=\"text\">
+  <string>All widgets</string>
+ </property>
+</widget>
+</widget>
+</ui>".
+
 ui() ->
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <ui version=\"4.0\">
- <class>MainWindow</class>
- <widget class=\"QMainWindow\" name=\"MainWindow_xml\">
+ <widget class=\"QMainWindow\" name=\"MainWindow\">
   <property name=\"geometry\">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>372</width>
-    <height>297</height>
+    <width>456</width>
+    <height>462</height>
    </rect>
   </property>
   <property name=\"windowTitle\">
-   <string>MainWindow (from XML)</string>
+   <string>MainWindow</string>
   </property>
   <widget class=\"QWidget\" name=\"centralWidget\">
    <widget class=\"QPushButton\" name=\"pushButton\">
     <property name=\"geometry\">
      <rect>
       <x>150</x>
-      <y>60</y>
+      <y>30</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -213,9 +269,9 @@ ui() ->
     <property name=\"geometry\">
      <rect>
       <x>20</x>
-      <y>40</y>
-      <width>46</width>
-      <height>13</height>
+      <y>10</y>
+      <width>201</width>
+      <height>16</height>
      </rect>
     </property>
     <property name=\"text\">
@@ -226,7 +282,7 @@ ui() ->
     <property name=\"geometry\">
      <rect>
       <x>20</x>
-      <y>60</y>
+      <y>30</y>
       <width>113</width>
       <height>20</height>
      </rect>
@@ -238,7 +294,7 @@ ui() ->
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>372</width>
+     <width>456</width>
      <height>21</height>
     </rect>
    </property>
@@ -289,4 +345,5 @@ ui() ->
    </hints>
   </connection>
  </connections>
-</ui>".
+</ui>
+".

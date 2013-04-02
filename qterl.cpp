@@ -82,6 +82,18 @@ void QtErl::postConnect(qte_state_t state, const char *name, const char *signal)
           state, name, signal));
 }
 
+QWidget *QtErl::findWidget(qte_state_t state, const QString &name)
+{
+  foreach (QWidget *w, root.values(state))
+  {
+    QWidget *o = w->findChild<QWidget *>(name);
+    if (o)
+      return o;
+  }
+
+  return NULL;
+}
+
 void QtErl::loadUI(QteLoadUIEvent *event)
 {
   QWidget *w;
@@ -117,23 +129,21 @@ void QtErl::connect(QteConnectEvent *event)
   QString name = event->getName();
   QString signal = QT_STRINGIFY(QSIGNAL_CODE) + event->getSignal();
   QString slot = SLOT(send_signal) + signal.right(signal.length() - signal.indexOf('('));
+  QWidget *w = findWidget(event->getQteStateRef().getQteState(), name);
 
-  foreach (QWidget *w, root.values(event->getQteStateRef().getQteState()))
+  if (w)
   {
-    QWidget *o = w->findChild<QWidget *>(name);
-    if (o)
-    {
-      QteConnection *c = new QteConnection(
-                           event, o,
-                           signal.toLocal8Bit().constData(),
-                           slot.toLocal8Bit().constData());
+    QteConnection *c = new QteConnection(
+                         event, w,
+                         signal.toLocal8Bit().constData(),
+                         slot.toLocal8Bit().constData());
 
-      if (!c->getOk())
-        delete c;
-      else
-        // connected message sent by qte connection when ok
-        return;
-    }
+    // connected message sent by qte connection when ok
+    if (c->getOk())
+      return;
+
+    // delete qte connection object if the connect failed
+    delete c;
   }
 
   QTE_SR_SEND(

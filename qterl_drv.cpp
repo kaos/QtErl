@@ -231,14 +231,23 @@ static void qte_finish(void)
   erl_drv_mutex_destroy(qte.mutex);
 }
 
-static int qte_decode_string(char *buf, int *index, char *dst, int len)
+static int qte_decode_string(char *buf, int *index, char **dst)
 {
   int type, size;
-  ei_get_type(buf, index, &type, &size);
-  if (size >= len)
-    return size;
 
-  return ei_decode_string(buf, index, dst);
+  if (*dst)
+  {
+    driver_free(*dst);
+    *dst = NULL;
+  }
+
+  ei_get_type(buf, index, &type, &size);
+
+  if (type != ERL_STRING_EXT)
+    return -1;
+
+  *dst = (char *)driver_alloc(size + 1);
+  return ei_decode_string(buf, index, *dst);
 }
 
 static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
@@ -249,20 +258,19 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
   (void)len; (void)rlen;
   int pos = 0;
   int arity;
-  char name[128];
+  char *name, *signal, *data;
 
   erlang_ref ref;
   qte_state_t state = (qte_state_t) drv_data;
 
   int ret = 1;
   (*rbuf)[ret] = '0';
+  name = signal = data = NULL;
 
   switch (command)
   {
     case QTERL_LOAD_UI:
       {
-        char data[128];
-
         // {#Ref, {ParentName, Data}}
 
         // version
@@ -285,11 +293,11 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
           break;
         // ParentName, hint: "" = top level widget
         (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, name, sizeof(name)))
+        if (qte_decode_string(buf, &pos, &name))
           break;
         // Data
         (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, data, sizeof(data)))
+        if (qte_decode_string(buf, &pos, &data))
           break;
         // } }
 
@@ -298,15 +306,13 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
         if (!q)
           break;
         // post load ui event to main Qt thread
-        q->postLoadUI(state, data); // todo: lookup parent widget
+        q->postLoadUI(state, data, q->findWidget(state, name));
         ret = 0;
         break;
       }
 
     case QTERL_CONNECT:
       {
-        char signal[64];
-
         // {#Ref, {Name, Signal}}
 
         // version
@@ -329,11 +335,11 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
           break;
         // Name
         (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, name, sizeof(name)))
+        if (qte_decode_string(buf, &pos, &name))
           break;
         // Signal
         (*rbuf)[ret]++;
-        if (qte_decode_string(buf, &pos, signal, sizeof(signal)))
+        if (qte_decode_string(buf, &pos, &signal))
           break;
         // } }
 
@@ -353,6 +359,11 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
   }
 
   QTE_CLOSE_REF(state);
+
+  if (name) driver_free(name);
+  if (signal) driver_free(signal);
+  if (data) driver_free(data);
+
   return ret;
 }
 

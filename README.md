@@ -23,6 +23,16 @@ Download
 For a quick test drive, I will post download links on https://github.com/kaos/QtErl/wiki/Downloads.
 
 
+TODO
+----
+
+* Restructure into an Erlang application.
+* Make it portable. Should be able to build and run on Windows/Linux/Mac OS (and preferably on BSD and Solaris flavours too, if those platforms are supported by Qt, that is).
+* Tests. Should have unit tests.
+* Documenatation, and more documentation. Examples. Tutorials.
+* Get more people involved (Hey, this bullet is for YOU :p)
+
+
 API
 ===
 
@@ -86,9 +96,10 @@ load_ui/3
 -spec load_ui(pid(), Ui::string(), Parent::string()) -> load_rsp().
 ```
 
-**Not yet implemented**
-
 Load user interface with given parent.
+
+**Note** I have not yet figured out how to get the newly loaded parent widget into its correct position.
+When running `qte:t3()` the loaded `centralWidget2` gets postion `0,0` thus overlapping the already existing widgets.
 
 
 connect/3
