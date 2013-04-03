@@ -10,6 +10,9 @@ QTERL_LIB = QtErl.$(QTERL_LIB_EXT)
 
 all: lib ebin
 
+werl: all
+	werl -pa ebin
+
 .PHONY: check
 check:
 	$(MAKE) -C test

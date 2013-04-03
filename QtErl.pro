@@ -41,7 +41,10 @@ OTHER_FILES += \
     Makefile \
     Emakefile \
     test/Makefile \
-    test/Emakefile
+    test/Emakefile \
+    example/addrbook.erl \
+    example/Makefile \
+    example/Emakefile
 
 
 win32: INCLUDEPATH += $$PWD/../../../../erl/5.9.3.1/erts-5.9.3.1/include
@@ -51,3 +54,6 @@ win32: LIBS += -L$$PWD/../../../../erl/5.9.3.1/lib/erl_interface-3.7.9/lib -lei
 win32: PRE_TARGETDEPS += $$PWD/../../../../erl/5.9.3.1/lib/erl_interface-3.7.9/lib/ei.lib
 
 ## Note to self: stay clear of erl_interface. That is a major headache to link against!
+
+FORMS += \
+    example/addrbook.ui

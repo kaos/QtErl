@@ -23,8 +23,7 @@
 %% Test exports
 -export([t/0, t2/0, t3/0, t4/0]).
 
-
-
+%% Types and specs
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
 -type start_rsp() :: {load_rsp(), pid()} | stop.
 -type connect_rsp() :: {ok, Name::string(), Signal::string()} | {error, Name::string(), Signal::string()}.
@@ -191,6 +190,10 @@ priv(File) ->
 
 %%%%%%%%%%
 %% test %%
+%%
+%% Todo: eunit'ize tests.
+%% Todo: move test data into separate files and load them at run time.
+%%
 
 t() ->
   {Rsp, P} = start(priv("test.ui")),

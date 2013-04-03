@@ -82,13 +82,24 @@ void QtErl::postConnect(qte_state_t state, const char *name, const char *signal)
           state, name, signal));
 }
 
+QObject *QtErl::findObject(qte_state_t state, const QString &name)
+{
+  if ("::application" == name)
+    return QApplication::instance();
+
+  return findWidget(state, name);
+}
+
 QWidget *QtErl::findWidget(qte_state_t state, const QString &name)
 {
   foreach (QWidget *w, root.values(state))
   {
-    QWidget *o = w->findChild<QWidget *>(name);
-    if (o)
-      return o;
+    if (w->objectName() == name)
+      return w;
+
+    QWidget *c = w->findChild<QWidget *>(name);
+    if (c)
+      return c;
   }
 
   return NULL;
@@ -129,12 +140,12 @@ void QtErl::connect(QteConnectEvent *event)
   QString name = event->getName();
   QString signal = QT_STRINGIFY(QSIGNAL_CODE) + event->getSignal();
   QString slot = SLOT(send_signal) + signal.right(signal.length() - signal.indexOf('('));
-  QWidget *w = findWidget(event->getQteStateRef().getQteState(), name);
+  QObject *o = findObject(event->getQteStateRef().getQteState(), name);
 
-  if (w)
+  if (o)
   {
     QteConnection *c = new QteConnection(
-                         event, w,
+                         event, o,
                          signal.toLocal8Bit().constData(),
                          slot.toLocal8Bit().constData());
 

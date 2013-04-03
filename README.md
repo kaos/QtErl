@@ -177,6 +177,8 @@ qte:connect/3
 
 ```erlang
 -spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
+
+signal format :: {signal, Sender, Signal | {Signal, [Args]}}.
 ```
 
 Connect to a widget signal. When a connected signal is emitted, it is sent as a message to the process that called `qte:connect/3`.
