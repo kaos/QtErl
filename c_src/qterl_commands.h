@@ -20,5 +20,6 @@
 
 #define QTERL_LOAD_UI 0
 #define QTERL_CONNECT 1
+#define QTERL_INVOKE  2
 
 #endif // QTERL_COMMANDS_H

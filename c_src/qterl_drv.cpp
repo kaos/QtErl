@@ -186,6 +186,7 @@ static ErlDrvData qte_start(ErlDrvPort port, char *command)
   state->ref = NULL;
   QTE_OPEN_REF(state, "start");
 
+  q->init(state);
   set_port_control_flags(port, PORT_CONTROL_FLAG_BINARY);
 
   char *p = strchr(command, ' ');
@@ -352,6 +353,50 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
           break;
         // post connect event to main Qt thread
         q->postConnect(state, name, signal);
+        ret = 0;
+        break;
+      }
+
+    case QTERL_INVOKE:
+      {
+        // {#Ref, {Name, Method, Args}}
+
+        // version
+        (*rbuf)[ret - 1]++;
+        if (ei_decode_version(buf, &pos, NULL))
+          break;
+        // {
+        (*rbuf)[ret - 1]++;
+        if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
+          break;
+        // #Ref
+        (*rbuf)[ret - 1]++;
+        if (ei_decode_ref(buf, &pos, &ref))
+          break;
+
+        QTE_OPEN_EREF(state, &ref);
+        // {
+        (*rbuf)[ret - 1]++;
+        if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 3)
+          break;
+        // Name
+        (*rbuf)[ret - 1]++;
+        if (qte_decode_string(buf, &pos, &name))
+          break;
+        // Method
+        (*rbuf)[ret - 1]++;
+        if (qte_decode_string(buf, &pos, &signal))
+          break;
+        // Args
+        // not yet implemented
+        // } }
+
+        (*rbuf)[ret - 1]++;
+        QtErl *q = QtErl_Instance();
+        if (!q)
+          break;
+        // post emit event to main Qt thread
+        q->postInvoke(state, name, signal);
         ret = 0;
         break;
       }

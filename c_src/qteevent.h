@@ -24,8 +24,8 @@
 
 #include "qterl_drv.h"
 
-#define QTE_SR_SEND(_sr_, _fmt_, ...) \
-  QTE_REF_SEND((_sr_).getQteState(), (_sr_).getQteRef(), (_fmt_), __VA_ARGS__)
+#define QTE_SR_SEND(_sr_, ...) \
+  QTE_REF_SEND((_sr_).getQteState(), (_sr_).getQteRef(), __VA_ARGS__)
 
 class QteStateRef
 {
@@ -51,7 +51,8 @@ class QteEvent : public QEvent
 public:
   enum QteType {
     LoadUI,
-    Connect
+    Connect,
+    Invoke
   };
 
   explicit QteEvent(QteType type, qte_state_t);
@@ -94,6 +95,21 @@ public:
 private:
   QString n;
   QString s;
+};
+
+class QteInvokeEvent : public QteEvent
+{
+  Q_GADGET
+
+public:
+  explicit QteInvokeEvent(qte_state_t, const char *name, const char *method);
+  QString getName() const { return n; }
+  QString getMethod() const { return m; }
+  // todo: args
+
+private:
+  QString n;
+  QString m;
 };
 
 #endif // QTEEVENT_H

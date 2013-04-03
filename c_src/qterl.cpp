@@ -26,12 +26,21 @@
 QtErl::QtErl(QObject *parent)
   : QObject(parent)
 {
+  parent->setObjectName("::root");
+}
+
+void QtErl::init(qte_state_t state)
+{
+  root.insert(state, parent());
 }
 
 void QtErl::clear(qte_state_t state)
 {
-  foreach (QWidget *w, root.values(state))
-    w->deleteLater();
+  foreach (QObject *o, root.values(state))
+  {
+    if (parent() != o)
+      o->deleteLater();
+  }
 
   root.remove(state);
 }
@@ -50,6 +59,10 @@ bool QtErl::event(QEvent *event)
 
     case QteEvent::Connect:
       connect((QteConnectEvent *)qte_event);
+      break;
+
+    case QteEvent::Invoke:
+      invoke((QteInvokeEvent *)qte_event);
       break;
 
     default:
@@ -82,27 +95,38 @@ void QtErl::postConnect(qte_state_t state, const char *name, const char *signal)
           state, name, signal));
 }
 
+void QtErl::postInvoke(qte_state_t state, const char *name, const char *signal)
+{
+  QApplication::instance()->postEvent(
+        this, new QteInvokeEvent(
+          state, name, signal));
+}
+
+template<typename T>
+T QtErl::find(qte_state_t state, const QString &name)
+{
+  foreach (QObject *o, root.values(state))
+  {
+    T t = dynamic_cast<T>(o);
+    if (t && (name == o->objectName()))
+      return t;
+
+    t = o->findChild<T>(name);
+    if (t)
+      return t;
+  }
+
+  return NULL;
+}
+
 QObject *QtErl::findObject(qte_state_t state, const QString &name)
 {
-  if ("::application" == name)
-    return QApplication::instance();
-
-  return findWidget(state, name);
+  return find<QObject *>(state, name);
 }
 
 QWidget *QtErl::findWidget(qte_state_t state, const QString &name)
 {
-  foreach (QWidget *w, root.values(state))
-  {
-    if (w->objectName() == name)
-      return w;
-
-    QWidget *c = w->findChild<QWidget *>(name);
-    if (c)
-      return c;
-  }
-
-  return NULL;
+  return find<QWidget *>(state, name);
 }
 
 void QtErl::loadUI(QteLoadUIEvent *event)
@@ -163,3 +187,35 @@ void QtErl::connect(QteConnectEvent *event)
         name.toLocal8Bit().constData(),
         event->getSignal().toLocal8Bit().constData());
 }
+
+void QtErl::invoke(QteInvokeEvent *event)
+{
+  QObject *o = findObject(event->getQteStateRef().getQteState(), event->getName());
+
+  if (!o)
+  {
+    QTE_SR_SEND(
+          event->getQteStateRef(),
+          "{error,{object_not_found,~s}}",
+          event->getName().toLocal8Bit().constData());
+    return;
+  }
+
+  const QMetaObject *m = o->metaObject();
+  int idx = m->indexOfMethod(event->getMethod().toLocal8Bit().constData());
+  if (-1 == idx)
+  {
+    QTE_SR_SEND(
+          event->getQteStateRef(),
+          "{error,{method_not_found,~s,~s}}",
+          m->className(),
+          event->getMethod().toLocal8Bit().constData());
+    return;
+  }
+
+  // todo: support args
+  m->method(idx).invoke(o);
+
+  QTE_SR_SEND(event->getQteStateRef(), "ok");
+}
+

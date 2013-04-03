@@ -186,6 +186,18 @@ Connect to a widget signal. When a connected signal is emitted, it is sent as a 
 `Signal` should match the string you would put into the Qt `SIGNAL` macro. E.g. `"clicked()"` or `"textChanged(QString)"` etc.
 
 
+qte:invoke/4
+------------
+
+```erlang
+-spec invoke(pid(), Name::string(), Method::string(), Args::list()) -> ok | {error, Reason::term()}.
+```
+
+**Note: Args are not yet supported, nor return values.**
+
+Invoke method on object. `Method` must be a normalized method a la Qt parlang, e.g. `"click()"` or `"setText(QString)"`.
+
+
 qte:compile/1
 -------------
 

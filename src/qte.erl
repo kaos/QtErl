@@ -18,7 +18,14 @@
 -include("qte_xml.hrl").
 
 %% API exports
--export([start/0, start/1, stop/1, load_ui/2, load_ui/3, connect/3, compile/1]).
+-export([
+  start/0, start/1,
+  stop/1,
+  load_ui/2, load_ui/3,
+  connect/3,
+  invoke/4,
+  compile/1
+]).
 
 %% Test exports
 -export([t/0, t2/0, t3/0, t4/0]).
@@ -35,6 +42,7 @@
 -spec load_ui(pid(), ui()) -> load_rsp().
 -spec load_ui(pid(), ui(), Parent::string()) -> load_rsp().
 -spec connect(pid(), Name::string(), Signal::string()) -> connect_rsp().
+-spec invoke(pid(), Name::string(), Method::string(), Args::list()) -> ok | {error, Reason::term()}.
 -spec compile(#ui{}) -> string().
 
 
@@ -88,6 +96,14 @@ connect(Pid, Name, Signal)
     {Pid, Res} -> Res
   end.
 
+%% invoke method on object
+invoke(Pid, Name, Method, Args)
+  when is_pid(Pid), is_list(Name), is_list(Method), is_list(Args) ->
+  Pid ! {self(), invoke, {Name, Method, Args}},
+  receive
+    {Pid, Res} -> Res
+  end.
+
 %% compile user interface defintion to Qt XML format
 compile(Ui) when is_record(Ui, ui) ->
   qte_xml:compile(Ui).
@@ -99,6 +115,7 @@ compile(Ui) when is_record(Ui, ui) ->
 
 -define(QTE_LOAD_UI, 0).
 -define(QTE_CONNECT, 1).
+-define(QTE_INVOKE,  2).
 
 -record(state, {
   port,
@@ -123,6 +140,8 @@ loop(#state{ port=Port }=State) ->
       loop(do_load_ui(Pid, What, State));
     {Pid, connect, What} ->
       loop(do_connect(Pid, What, State));
+    {Pid, invoke, What} ->
+      loop(do_invoke(Pid, What, State));
     stop ->
       port_close(Port);
     {'EXIT', Port, Reason} ->
@@ -158,15 +177,17 @@ control(Port, Command, Data) ->
   end.
 
 %%
-do_load_ui(Pid, What, #state{ port=Port }=State) ->
-  case control(Port, ?QTE_LOAD_UI, What) of
-    {_Ref, Rsp} ->
-      Pid ! {self(), Rsp},
-      State;
-    Else ->
-      Pid ! {self(), Else},
-      State
-  end.
+request(From, Command, Data, #state{ port=Port }=State) ->
+  Reply = case control(Port, Command, Data) of
+    {_Ref, Rsp} -> Rsp;
+    Else -> Else
+  end,
+  From ! {self(), Reply},
+  State.
+
+%%
+do_load_ui(Pid, What, State) ->
+  request(Pid, ?QTE_LOAD_UI, What, State).
 
 %%
 do_connect(Pid, What, #state{ port=Port }=State) ->
@@ -179,6 +200,10 @@ do_connect(Pid, What, #state{ port=Port }=State) ->
       Pid ! {self(), Else},
       State
   end.
+
+%%
+do_invoke(Pid, What, State) ->
+  request(Pid, ?QTE_INVOKE, What, State).
 
 %%
 priv() -> priv("").

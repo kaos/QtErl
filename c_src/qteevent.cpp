@@ -79,3 +79,9 @@ QteConnectEvent::QteConnectEvent(qte_state_t state, const char *name, const char
   : QteEvent(Connect, state), n(name), s(signal)
 {
 }
+
+/* QteInvokeEvent */
+QteInvokeEvent::QteInvokeEvent(qte_state_t state, const char *name, const char *method)
+  : QteEvent(Invoke, state), n(name), m(method) // todo: args
+{
+}

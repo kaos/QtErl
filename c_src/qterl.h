@@ -34,9 +34,14 @@ class QtErl : public QObject
 public:
   explicit QtErl(QObject *parent = 0);
   bool event(QEvent *event);
+  void init(qte_state_t state);
   void clear(qte_state_t state);
   void postLoadUI(qte_state_t state, const char *FileName, QWidget *parent = 0);
   void postConnect(qte_state_t state, const char *name, const char *signal);
+  void postInvoke(qte_state_t state, const char *name, const char *method /*, todo: args */);
+
+  template<typename T>
+  T find(qte_state_t state, const QString &name);
   QObject *findObject(qte_state_t state, const QString &name);
   QWidget *findWidget(qte_state_t state, const QString &name);
 
@@ -47,9 +52,10 @@ public slots:
 protected:
   void loadUI(QteLoadUIEvent *event);
   void connect(QteConnectEvent *event);
+  void invoke(QteInvokeEvent *event);
 
 private:
-  QMultiHash<qte_state_t, QWidget *> root;
+  QMultiHash<qte_state_t, QObject *> root;
 };
 
 #endif // QTERL_H
