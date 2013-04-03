@@ -45,6 +45,11 @@ void QtErl::clear(qte_state_t state)
   root.remove(state);
 }
 
+bool QtErl::valid(qte_state_t state)
+{
+  return 0 < root.values(state).count();
+}
+
 bool QtErl::event(QEvent *event)
 {
   if (event->type() != QteEvent::QteEventType())

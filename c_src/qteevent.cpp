@@ -37,6 +37,11 @@ QteStateRef::~QteStateRef()
   qte_free_ref(&ref);
 }
 
+qte_state_t QteStateRef::getQteState()
+{
+  return qte_state_valid(state) ? state : NULL;
+}
+
 /* QteEvent */
 int QteEvent::qte_event_type = 0;
 

@@ -34,7 +34,7 @@ public:
   QteStateRef(const QteStateRef&);
   ~QteStateRef();
 
-  qte_state_t getQteState() { return state; }
+  qte_state_t getQteState();
   qte_ref_t *getQteRef() { return ref_p; }
 
 private:

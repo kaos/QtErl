@@ -436,6 +436,15 @@ static ErlDrvSSizeT qte_call(ErlDrvData drv_data,
   return 0;
 }
 
+bool qte_state_valid(qte_state_t state)
+{
+  if (!state)
+    return false;
+
+  QtErl *q = QtErl_Instance();
+  return q && q->valid(state);
+}
+
 ei_x_buff *qte_prepare_ext(qte_state_t state)
 {
   ei_x_new(&state->ext);
