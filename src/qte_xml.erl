@@ -33,10 +33,12 @@
 %% ------------------------------------
 
 %% compile a user interface description to XML data
-compile(#ui{ version=Ver, widgets=Widgets }) ->
+compile(Ui) when is_record(Ui, ui) ->
   lists:flatten([
-    xml_header(Ver),
-    compile_widgets(Widgets),
+    xml_header(Ui#ui.version),
+    compile_widgets(Ui#ui.widgets),
+    compile_resources(Ui#ui.resources),
+    compile_connections(Ui#ui.connections),
     "</ui>"
   ]).
 
@@ -51,6 +53,14 @@ xml_header(Ver) ->
 compile_widgets(Ws)     -> [compile_widget(W)     || W <- Ws].
 compile_properties(Ps)  -> [compile_property(P)   || P <- Ps].
 compile_attributes(As)  -> [compile_attribute(A)  || A <- As].
+compile_resources(_)    -> "<resources/>".
+compile_connections([]) -> "<connections/>";
+compile_connections(Cs) ->
+  [
+    "<connections>",
+    [compile_connection(C) || C <- Cs],
+    "</connections>"
+  ].
 
 compile_widget(#widget{ class=Class, name=Name }=W) ->
   [io_lib:format("<widget class=\"~s\" name=\"~s\">", [Class, Name]),
@@ -75,6 +85,11 @@ compile_attribute_value(Value) when is_number(Value) ->
 compile_attribute_value(Value) when is_list(Value); is_atom(Value) ->
   io_lib:format("~s", [Value]).
 
+compile_connection(#connection{ sender=Src, signal=Sig, receiver=Dst, slot=Slot }) ->
+  [io_lib:format(
+    "<connection><sender>~s</sender><signal>~s</signal><receiver>~s</receiver><slot>~s</slot></connection>",
+    [Src, Sig, Dst, Slot])].
+
 
 -ifdef(TEST).
 %% ------------------------------------
@@ -91,21 +106,36 @@ compile_test() ->
           "</property>",
           "<property name=\"windowTitle\"><string>MainWindow</string></property>",
         "</widget>",
+        "<resources/>",
+        "<connections><connection>",
+          "<sender>lineEdit</sender><signal>textChanged(QString)</signal>",
+          "<receiver>label</receiver><slot>setText(QString)</slot>"
+        "</connection></connections>",
       "</ui>"]),
-    compile(#ui{ widgets=[
-        #widget{ class="QMainWindow", name="MainWindow", properties=[
-            #property{ name=geometry, attributes=[
-                #attribute{ name=rect, value=[
-                  #attribute{ name=x, value=0 },
-                  #attribute{ name=y, value=0 },
-                  #attribute{ name=width, value=456 },
-                  #attribute{ name=height, value=462 }
-                ]}
+    compile(#ui{
+      widgets=[
+        #widget{ class="QMainWindow", name="MainWindow",
+          properties=[
+            #property{ name=geometry,
+              attributes=[
+                #attribute{ name=rect,
+                  value=[
+                    #attribute{ name=x, value=0 },
+                    #attribute{ name=y, value=0 },
+                    #attribute{ name=width, value=456 },
+                    #attribute{ name=height, value=462 }
+                  ]}
               ]},
-            #property{ name="windowTitle", attributes=[
+            #property{ name="windowTitle",
+              attributes=[
                 #attribute{ name=string, value="MainWindow" }
               ]}
           ]}
+      ],
+      connections=[
+        #connection{
+          sender=lineEdit, signal="textChanged(QString)",
+          receiver=label, slot="setText(QString)" }
       ]})
   ).
 

@@ -10,6 +10,10 @@ QTERL_LIB = QtErl.$(QTERL_LIB_EXT)
 
 all: lib ebin
 
+.PHONY: check
+check:
+	$(MAKE) -C test
+
 .PHONY: lib
 lib: priv/$(QTERL_LIB)
 

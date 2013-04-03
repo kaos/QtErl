@@ -2,3 +2,4 @@ QtErl.pro.*
 ebin/*
 priv/QtErl.*
 priv/c_objs/*
+test/ebin/*

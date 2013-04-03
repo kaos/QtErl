@@ -31,9 +31,16 @@
   children=[] :: [#widget{}]
 }).
 
+-record(connection, {
+  sender :: string() | atom(),
+  signal :: string(),
+  receiver :: string() | atom(),
+  slot :: string()
+}).
+
 -record(ui, {
   version="4.0" :: string(),
   widgets=[] :: [#widget{}],
-  resources=[] :: list(),   %% not yet specified
-  connections=[] :: list()  %%     -"- nor tested
+  resources=[] :: list(),   %% not yet specified nor tested
+  connections=[] :: [#connection{}]
 }).

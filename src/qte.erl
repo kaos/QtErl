@@ -276,7 +276,16 @@ t4() ->
             } % centralWidget
           ] % MainWindow.children
         } % MainWindow
-    ]}), % widgets, ui
+      ],
+      connections=[
+        #connection{
+          sender=lineEdit, signal="textChanged(QString)",
+          receiver=label, slot="setText(QString)" },
+        #connection{
+          sender=pushButton, signal="clicked()",
+          receiver=lineEdit, slot="clear()" }
+      ]
+    }), % widgets, ui
   io:format("t: load_ui = ~p~n", [Rload]),
   Rconnect = connect(P, "pushButton", "clicked()"),
   io:format("t: connect = ~p~n", [Rconnect]),
