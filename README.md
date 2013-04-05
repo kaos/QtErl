@@ -30,7 +30,7 @@ TODO
 * Tests. Should have unit tests.
 * Documenatation, and more documentation. Examples. Tutorials.
 * Get more people involved (Hey, this bullet is for YOU :p)
-* Trigger widget slots.
+* `[in progress]` Trigger widget slots. (needs more testing, stability checks, support for more types, etc..)
 * `[done]` Restructure into an Erlang application.
 
 
@@ -49,7 +49,7 @@ What you need:
 - Erlang (obviously)
     Tested with: Erlang R15B03 (erts-5.9.3.1) (I had issues with loading the dll on R16B).
 
-** For now, you need to tweak `QtErl.pro` to point to where you have erlang installed. **
+**For now, you need to tweak `QtErl.pro` to point to where you have erlang installed.**
 
 Simply `make all` in the project root dir. It should build QtErl.dll and beam files.
 Run `werl -pa ebin` to start a new erlang window. To load the `priv/test.ui` file, you can issue `qte:t().`.
@@ -193,9 +193,11 @@ qte:invoke/4
 -spec invoke(pid(), Name::string(), Method::string(), Args::list()) -> ok | {error, Reason::term()}.
 ```
 
-**Note: Args are not yet supported, nor return values.**
+**Note: Return values are not yet supported.**
 
 Invoke method on object. `Method` must be a normalized method a la Qt parlang, e.g. `"click()"` or `"setText(QString)"`.
+Also note that the method has to be [invokable](http://qt-project.org/doc/qt-5.0/qtcore/qobject.html#Q_INVOKABLE) by a [QMetaObject](http://qt-project.org/doc/qt-5.0/qtcore/qmetaobject.html) (i.e. known to the [Qt meta system](http://qt-project.org/doc/qt-5.0/qtcore/metaobjects.html#meta-object-system)).
+That is, `slots` (and `signals`, but those are always protected, so we can't call them) and functions marked with [`Q_INVOKABLE`](http://qt-project.org/doc/qt-5.0/qtcore/qobject.html#Q_INVOKABLE).
 
 
 qte:compile/1

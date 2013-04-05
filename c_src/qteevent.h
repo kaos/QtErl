@@ -27,6 +27,41 @@
 #define QTE_SR_SEND(_sr_, ...) \
   QTE_REF_SEND((_sr_).getQteState(), (_sr_).getQteRef(), __VA_ARGS__)
 
+class QteArgument
+{
+public:
+  QteArgument(const char *name, void *data)
+    : d(data), n(name) {}
+  QteArgument(const char *name, char data)
+    : d(&v), n(name), v(data) {}
+  QteArgument(const char *name, long data)
+    : d(&v), n(name), v(data) {}
+  QteArgument(const char *name, double data)
+    : d(&v), n(name), v(data) {}
+  ~QteArgument();
+  void *data() const { return const_cast<void *>(d); }
+  const char *name() const { return n; }
+private:
+  const void *d;
+  const char *n;
+  union _v {
+    _v() {}
+    double d; _v(double _)  : d(_) {}
+    long l;   _v(long _)    : l(_) {}
+    char c;   _v(char _)    : c(_) {}
+  } v;
+};
+
+class QteArgumentList : public QList<QteArgument *>
+{
+public:
+  ~QteArgumentList();
+};
+
+#define QTE_ARG(_type_, _value_) new QteArgument(#_type_, _value_)
+#define QTE_ARG_NEW(_type_, _value_) new QteArgument(#_type_, new _type_(_value_))
+#define QTE_Q_ARG(_argp_) _argp_ ? QGenericArgument(_argp_->name(), _argp_->data()) : QGenericArgument()
+
 class QteStateRef
 {
 public:
@@ -102,14 +137,16 @@ class QteInvokeEvent : public QteEvent
   Q_GADGET
 
 public:
-  explicit QteInvokeEvent(qte_state_t, const char *name, const char *method);
+  explicit QteInvokeEvent(qte_state_t, const char *name, const char *method, QteArgumentList *args);
+  ~QteInvokeEvent();
   QString getName() const { return n; }
   QString getMethod() const { return m; }
-  // todo: args
+  QteArgumentList *getArguments() { return a; }
 
 private:
   QString n;
   QString m;
+  QteArgumentList *a;
 };
 
 #endif // QTEEVENT_H

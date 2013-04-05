@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QMetaEnum>
+#include <QMetaType>
 
 QtErl::QtErl(QObject *parent)
   : QObject(parent)
@@ -86,25 +87,25 @@ bool QtErl::event(QEvent *event)
   return true;
 }
 
-void QtErl::postLoadUI(qte_state_t state, const char *FileName, QWidget *parent)
+void QtErl::postLoadUI(qte_state_t state, const char *fileName, QWidget *parent)
 {
-  QApplication::instance()->postEvent(
+  QApplication::postEvent(
         this, new QteLoadUIEvent(
-          state, FileName, parent));
+          state, fileName, parent));
 }
 
 void QtErl::postConnect(qte_state_t state, const char *name, const char *signal)
 {
-  QApplication::instance()->postEvent(
+  QApplication::postEvent(
         this, new QteConnectEvent(
           state, name, signal));
 }
 
-void QtErl::postInvoke(qte_state_t state, const char *name, const char *signal)
+void QtErl::postInvoke(qte_state_t state, const char *name, const char *signal, QteArgumentList *args) //qte_args_t args)
 {
-  QApplication::instance()->postEvent(
+  QApplication::postEvent(
         this, new QteInvokeEvent(
-          state, name, signal));
+          state, name, signal, args));
 }
 
 template<typename T>
@@ -206,21 +207,33 @@ void QtErl::invoke(QteInvokeEvent *event)
     return;
   }
 
-  const QMetaObject *m = o->metaObject();
-  int idx = m->indexOfMethod(event->getMethod().toLocal8Bit().constData());
+  const QMetaObject *mo = o->metaObject();
+  int idx = mo->indexOfMethod(event->getMethod().toLocal8Bit().constData());
   if (-1 == idx)
   {
     QTE_SR_SEND(
           event->getQteStateRef(),
           "{error,{method_not_found,~s,~s}}",
-          m->className(),
+          mo->className(),
           event->getMethod().toLocal8Bit().constData());
     return;
   }
 
-  // todo: support args
-  m->method(idx).invoke(o);
+  QMetaMethod mm = mo->method(idx);
+  QteArgumentList *args = event->getArguments();  
+  QteArgument *qa[10] = { NULL };
 
-  QTE_SR_SEND(event->getQteStateRef(), "ok");
+  if (args)
+    for (int i = 0; i < 10; i++)
+      qa[i] = args->value(i, NULL);
+
+  if (mm.invoke(o,
+        QTE_Q_ARG(qa[0]), QTE_Q_ARG(qa[1]), QTE_Q_ARG(qa[2]), QTE_Q_ARG(qa[3]), QTE_Q_ARG(qa[4]),
+        QTE_Q_ARG(qa[5]), QTE_Q_ARG(qa[6]), QTE_Q_ARG(qa[7]), QTE_Q_ARG(qa[8]), QTE_Q_ARG(qa[9])))
+    QTE_SR_SEND(event->getQteStateRef(), "ok");
+  else
+    QTE_SR_SEND(event->getQteStateRef(), "{error, {invoke_failed,~s,~s}}",
+                mo->className(),
+                mm.typeName());
 }
 

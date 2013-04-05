@@ -18,6 +18,28 @@
 #include "qterl.h"
 #include <QBuffer>
 #include <QFile>
+#include <QMetaType>
+
+/* QteArgument */
+QteArgument::~QteArgument()
+{
+  switch (QMetaType::type(name()))
+  {
+    case QMetaType::QString:
+      delete static_cast<QString *>(data());
+      break;
+
+    default:
+      break;
+  }
+}
+
+/* QteArgumentList */
+QteArgumentList::~QteArgumentList()
+{
+  while (!isEmpty())
+    delete takeFirst();
+}
 
 /* QteStateRef */
 QteStateRef::QteStateRef(qte_state_t s)
@@ -86,7 +108,13 @@ QteConnectEvent::QteConnectEvent(qte_state_t state, const char *name, const char
 }
 
 /* QteInvokeEvent */
-QteInvokeEvent::QteInvokeEvent(qte_state_t state, const char *name, const char *method)
-  : QteEvent(Invoke, state), n(name), m(method) // todo: args
+QteInvokeEvent::QteInvokeEvent(qte_state_t state, const char *name, const char *method, QteArgumentList *args)
+  : QteEvent(Invoke, state), n(name), m(method), a(args)
 {
+}
+
+QteInvokeEvent::~QteInvokeEvent()
+{
+  if (a)
+    delete a;
 }

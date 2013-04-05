@@ -37,9 +37,9 @@ public:
   void init(qte_state_t state);
   void clear(qte_state_t state);
   bool valid(qte_state_t state);
-  void postLoadUI(qte_state_t state, const char *FileName, QWidget *parent = 0);
+  void postLoadUI(qte_state_t state, const char *fileName, QWidget *parent = 0);
   void postConnect(qte_state_t state, const char *name, const char *signal);
-  void postInvoke(qte_state_t state, const char *name, const char *method /*, todo: args */);
+  void postInvoke(qte_state_t state, const char *name, const char *method, QteArgumentList *args);
 
   template<typename T>
   T find(qte_state_t state, const QString &name);

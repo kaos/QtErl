@@ -41,6 +41,7 @@ struct qte_state_s {
   qte_ref_t *ref;
 };
 
+
 static int qte_init(void);
 static ErlDrvData qte_start(ErlDrvPort port, char *command);
 static void qte_stop(ErlDrvData drv_data);
@@ -254,22 +255,26 @@ static int qte_decode_string(char *buf, int *index, char **dst)
   return ei_decode_string(buf, index, *dst);
 }
 
+// TODO: the qte_control function is in dire need of refactoring and overall improvement
 static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
                                 unsigned int command,
                                 char *buf, ErlDrvSizeT len,
                                 char **rbuf, ErlDrvSizeT rlen)
 {
   (void)len; (void)rlen;
-  int pos = 0;
+  int ret, pos;
   int arity;
   char *name, *signal, *data;
 
+  ei_term t;
   erlang_ref ref;
   qte_state_t state = (qte_state_t) drv_data;
+  QteArgumentList *args;
 
-  int ret = 1;
-  (*rbuf)[ret - 1] = '0';
+  args = NULL;
   name = signal = data = NULL;
+  ret = pos = 0;
+  (*rbuf)[ret++] = '0';
 
   switch (command)
   {
@@ -359,44 +364,122 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
 
     case QTERL_INVOKE:
       {
-        // {#Ref, {Name, Method, Args}}
+        // {#Ref, {Name::string(), Method::string(), Args::[term()] }}
 
-        // version
+        // (1) version
         (*rbuf)[ret - 1]++;
         if (ei_decode_version(buf, &pos, NULL))
           break;
-        // {
+        // (2) {
         (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 2)
           break;
-        // #Ref
+        // (3) #Ref
         (*rbuf)[ret - 1]++;
         if (ei_decode_ref(buf, &pos, &ref))
           break;
 
         QTE_OPEN_EREF(state, &ref);
-        // {
+        // (4) {
         (*rbuf)[ret - 1]++;
         if (ei_decode_tuple_header(buf, &pos, &arity) || arity != 3)
           break;
-        // Name
+        // (5) Name
         (*rbuf)[ret - 1]++;
         if (qte_decode_string(buf, &pos, &name))
           break;
-        // Method
+        // (6) Method
         (*rbuf)[ret - 1]++;
         if (qte_decode_string(buf, &pos, &signal))
           break;
-        // Args
-        // not yet implemented
+        // (7) Args
+        (*rbuf)[ret - 1]++;
+        if (0 > ei_decode_ei_term(buf, &pos, &t))
+            break;
+
+        // (7)(type)
+        (*rbuf)[ret++] = t.ei_type;
+        if (ERL_STRING_EXT == t.ei_type)
+        {
+          // (7)('k')(0)
+          (*rbuf)[ret++] = '0';
+          if (t.size >= (int)sizeof(t.value.atom_name))
+            break;
+
+          // (7)('k')(1)
+          (*rbuf)[ret - 1]++;
+          if (ei_decode_string(buf, &pos, t.value.atom_name))
+            break;
+
+          args = new QteArgumentList;
+          for (int i = 0; i < t.size; i++)
+          {
+            // (7)('k')(n)
+            (*rbuf)[ret - 1]++;
+            args->append(QTE_ARG(char, t.value.atom_name[i]));
+          }
+        }
+        else if (ERL_LIST_EXT == t.ei_type)
+        {
+          arity = t.arity;
+          args = new QteArgumentList;
+
+          // (7)('l')(arity)(0)
+          (*rbuf)[ret++] = '0' + arity;
+          (*rbuf)[ret++] = '0';
+          for (int i = 0; i < arity; i++)
+          {
+            // (7)('l')(arity)(n)
+            (*rbuf)[ret - 1]++;
+            switch (ei_decode_ei_term(buf, &pos, &t))
+            {
+              case 0:
+                switch (t.ei_type)
+                {
+                  case ERL_STRING_EXT:
+                    if (((t.size + 1) >= (int)sizeof(t.value.atom_name)) ||
+                        ei_decode_string(buf, &pos, t.value.atom_name))
+                      break;
+
+                    args->append(QTE_ARG_NEW(QString, t.value.atom_name));
+                    break;
+                }
+                break;
+
+              case 1:
+                switch (t.ei_type)
+                {
+                  case ERL_SMALL_INTEGER_EXT:
+                  case ERL_INTEGER_EXT:
+                    args->append(QTE_ARG(long, t.value.i_val));
+                    break;
+                  case ERL_FLOAT_EXT:
+                  case NEW_FLOAT_EXT:
+                    args->append(QTE_ARG(double, t.value.d_val));
+                    break;
+                }
+                break;
+
+              case -1:
+                break;
+            }
+          }
+        }
+        else if (ERL_NIL_EXT != t.ei_type)
+          break;
+
         // } }
 
-        (*rbuf)[ret - 1]++;
+        // (7)(type)...(1)
+        (*rbuf)[ret++] = '1';
         QtErl *q = QtErl_Instance();
         if (!q)
           break;
-        // post emit event to main Qt thread
-        q->postInvoke(state, name, signal);
+
+        // post invoke event to main Qt thread
+        q->postInvoke(state, name, signal, args);
+
+        args = NULL;
         ret = 0;
         break;
       }
@@ -411,6 +494,7 @@ static ErlDrvSSizeT qte_control(ErlDrvData drv_data,
   if (name) driver_free(name);
   if (signal) driver_free(signal);
   if (data) driver_free(data);
+  if (args) delete args;
 
   return ret;
 }

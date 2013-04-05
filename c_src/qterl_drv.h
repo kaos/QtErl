@@ -54,12 +54,11 @@ int qte_send_ext(qte_state_t state, ei_x_buff *ext, qte_ref_t *ref = NULL);
 
 #define QTE_SEND(_state_, ...) QTE_REF_SEND((_state_), NULL, __VA_ARGS__)
 #define QTE_REF_SEND(_state_, _ref_, ...)     \
-  if (_state_)                                \
-  {                                           \
+  do { if (_state_) {                         \
     ei_x_buff *x = qte_prepare_ext(_state_);  \
     ei_x_format(x, __VA_ARGS__);              \
     qte_send_ext((_state_), x, (_ref_));      \
     ei_x_free(x);                             \
-  }
+  }} while(0)
 
 #endif // QTERL_DRV_H

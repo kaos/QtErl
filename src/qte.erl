@@ -28,7 +28,7 @@
 ]).
 
 %% Test exports
--export([t/0, t2/0, t3/0, t4/0]).
+-export([t/0, t2/0, t3/0, t4/0, t5/0]).
 
 %% Types and specs
 -type load_rsp() :: {ok, TopLevel::string()} | {error, Reason::term()}.
@@ -318,6 +318,10 @@ t4() ->
   Rconnect = connect(P, "pushButton", "clicked()"),
   io:format("t: connect = ~p~n", [Rconnect]),
   P.
+
+t5() ->
+  P = t(),
+  qte:invoke(P, "lineEdit", "setText(QString)", ["testing"]).
 
 extra_ui() ->
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
