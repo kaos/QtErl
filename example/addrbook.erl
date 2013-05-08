@@ -1,6 +1,8 @@
 -module(addrbook).
 -export([start/0]).
 
+-export([p/0]).
+
 start() ->
     spawn(fun init/0).
 
@@ -12,12 +14,14 @@ init() ->
              {"::root", "lastWindowClosed()"},
              {"action_Add", "triggered()"}
             ]],
+    register(?MODULE, self()),
     loop(Q).
 
 loop(Q) ->
     receive
         {signal, action_Add, triggered} ->
             io:format("add~n", []),
+            ok = qte:invoke(Q, "tableWidget", "insertRow(int)", [0]),
             loop(Q);
         {signal, _, lastWindowClosed} ->
             io:format("quitting (closed)...~n", []),
@@ -27,8 +31,19 @@ loop(Q) ->
             loop(Q);
         quit ->
             io:format("quitting (requested)...~n", []),
-            erlang:halt();
+            qte:stop(Q);
+        {Pid, port} ->
+            Pid ! {port, Q},
+            loop(Q);
         What ->
             io:format("got what? ~p~n", [What]),
             loop(Q)
+    end.
+
+
+%% get port (for debugging)
+p() ->
+    addrbook ! {self(), port},
+    receive 
+        {port, P} -> P
     end.

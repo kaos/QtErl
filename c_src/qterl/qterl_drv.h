@@ -21,8 +21,21 @@
 #if defined(WIN32) && !defined(__WIN32__)
 #define __WIN32__
 #endif
+
+extern "C" {
+  // need to wrap erl_driver.h as that is not properly handled on windows
+  // for the DRIVER_INIT macro
+  #include <erl_driver.h>
+}
+
+// properly wraps declarations with extern "C" as needed
 #include <ei.h>
 
+#define QTERL_LOAD_UI 0
+#define QTERL_CONNECT 1
+#define QTERL_INVOKE  2
+
+/*
 // opaque state for the outside world
 typedef struct qte_state_s *qte_state_t;
 
@@ -60,5 +73,7 @@ int qte_send_ext(qte_state_t state, ei_x_buff *ext, qte_ref_t *ref = NULL);
     qte_send_ext((_state_), x, (_ref_));      \
     ei_x_free(x);                             \
   }} while(0)
+
+  */
 
 #endif // QTERL_DRV_H

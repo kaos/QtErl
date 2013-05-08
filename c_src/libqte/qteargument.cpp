@@ -14,12 +14,24 @@
  *  limitations under the License.
  */
 
+#include <qobject.h>
+#include "qteargument.h"
 
-#ifndef QTERL_COMMANDS_H
-#define QTERL_COMMANDS_H
+QtEArgument::~QtEArgument()
+{
+  switch (QMetaType::type(name()))
+  {
+    case QMetaType::QString:
+      delete static_cast<QString *>(data());
+      break;
 
-#define QTERL_LOAD_UI 0
-#define QTERL_CONNECT 1
-#define QTERL_INVOKE  2
+    default:
+      break;
+  }
+}
 
-#endif // QTERL_COMMANDS_H
+QtEArgumentList::~QtEArgumentList()
+{
+  while (!isEmpty())
+    delete takeFirst();
+}

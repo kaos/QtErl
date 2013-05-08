@@ -14,30 +14,25 @@
  *  limitations under the License.
  */
 
+#ifndef QTERLSTATE_H
+#define QTERLSTATE_H
 
-#ifndef QTECONNECTION_H
-#define QTECONNECTION_H
+#include "qteabstractstate.h"
+#include "qterl_drv.h"
 
-#include <QObject>
-#include "qteevent.h"
-
-class QteConnection : public QObject
+class QtErlState : public QtEAbstractState
 {
-  Q_OBJECT
 public:
-  explicit QteConnection(QteEvent *event, QObject *sender, const char *signal, const char *slot);
-  bool getOk() { return ok; }
+  QtErlState(QtEStateId state_id, ErlDrvPort port, ei_x_buff *ref);
 
-signals:
-  
-public slots:
-  void send_signal();
-  void send_signal(QString str);
+  void notify(const char *event, const char *tag = 0, const char *key = 0, const char *value = 0);
+  void notify(const char *event, const char *tag, const char *key, QStringList const &value);
 
 private:
-  QteStateRef sr;
-  QString sig_name;
-  bool ok;
+  ErlDrvPort dp;
+  ei_x_buff r;
+
+  int send(ei_x_buff *x);
 };
 
-#endif // QTECONNECTION_H
+#endif // QTERLSTATE_H

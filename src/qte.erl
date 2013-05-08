@@ -55,7 +55,7 @@ start() -> start([]).
 
 %% spawn new QtErl port driver and load ui from file (or xml string)
 start(Ui) when is_list(Ui) ->
-  case erl_ddll:load(priv(), "QtErl") of
+  case erl_ddll:load(priv(), "qterl") of
     ok -> ok;
     {error, already_loaded} -> ok;
     E -> exit({error, {qte, could_not_load, E}})
@@ -65,7 +65,7 @@ start(Ui) when is_list(Ui) ->
   receive
     {Pid, {start, Rsp}} -> {Rsp, Pid}
   after
-    2000 -> stop(Pid)
+    20000 -> stop(Pid)
   end;
 start(Ui) when is_record(Ui, ui) ->
   start(compile(Ui)).
@@ -125,11 +125,11 @@ compile(Ui) when is_record(Ui, ui) ->
 
 %% open port and enter loop
 init(Pid, Filename) ->
-  Port = open_port({spawn, "QtErl " ++ Filename}, []),
+  Port = open_port({spawn, "qterl " ++ Filename}, []),
   receive
     {start, _}=Rsp -> Pid ! {self(), Rsp}
   after
-    2000 -> skip
+    20000 -> skip
   end,
   loop(#state{ port=Port }).
 
@@ -169,7 +169,7 @@ control(Port, Command, Data) ->
       receive
         {Ref, _}=Rsp -> Rsp
       after
-        1000 -> timeout
+        10000 -> timeout
       end;
     Err ->
       io:format("qte command failed: ~p, ~p~nstack: ~p~n", [Err, Data, erlang:get_stacktrace()]),

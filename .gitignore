@@ -1,6 +1,7 @@
 QtErl.pro.*
-priv/QtErl.*
-priv/c_objs/*
+priv/qterl.dll
+priv/build/*
 *.beam
 *.dump
 *.autosave
+*.zip
