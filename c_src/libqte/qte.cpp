@@ -74,15 +74,14 @@ QWidget *QtE::findWidget(QtEStateId id, const QString &name)
   return find<QWidget *>(id, name);
 }
 
-bool QtE::event(QEvent *event)
+void QtE::customEvent(QEvent *event)
 {
-  if (event->type() == QtEEvent::EventType())
-  {
-    QtEEvent *e = dynamic_cast<QtEEvent *>(event);
-    return e && e->execute(this);
-  }
+  if (event->type() != QtEEvent::EventType())
+    return;
 
-  return QObject::event(event);
+  QtEEvent *e = dynamic_cast<QtEEvent *>(event);
+  if (e)
+    e->execute(this);
 }
 
 void QtE::loaded(QWidget *widget, QtEAbstractState *state)

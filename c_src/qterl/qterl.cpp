@@ -159,7 +159,7 @@ int QtErl::init(int argc, char **argv)
 
 void QtErl::close()
 {
-  QApplication::exit(0);
+  QApplication::postEvent(qApp, new QEvent(QEvent::Quit));
 
   erl_drv_thread_join(main_thread, NULL);
   erl_drv_cond_destroy(cond);

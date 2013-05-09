@@ -8,7 +8,7 @@ start() ->
 
 init() ->
     {{ok, _}, Q} = qte:start("addrbook.ui"),
-    [{ok, _, _} = qte:connect(Q, Sender, Signal) 
+    [{ok, _} = qte:connect(Q, Sender, Signal)
      || {Sender, Signal} <- 
             [
              {"::root", "lastWindowClosed()"},
@@ -19,14 +19,14 @@ init() ->
 
 loop(Q) ->
     receive
-        {signal, action_Add, triggered} ->
+        {signal, {action_Add, "triggered"}} ->
             io:format("add~n", []),
             ok = qte:invoke(Q, "tableWidget", "insertRow(int)", [0]),
             loop(Q);
-        {signal, _, lastWindowClosed} ->
+        {signal, {_, "lastWindowClosed"}} ->
             io:format("quitting (closed)...~n", []),
             erlang:halt();
-        {signal, _Sender, _Signal} ->
+        {signal, {_Sender, _Signal}} ->
             io:format("got signal: ~p from ~p~n", [_Signal, _Sender]),
             loop(Q);
         quit ->

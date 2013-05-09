@@ -59,7 +59,7 @@ public:
   QWidget *findWidget(QtEAbstractState *state, const QString &name)
     { return findWidget(state->getId(), name); }
 
-  bool event(QEvent *event);
+  void customEvent(QEvent *event);
   void loaded(QWidget *widget, QtEAbstractState *state);
 
 private:
