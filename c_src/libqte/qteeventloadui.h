@@ -27,7 +27,7 @@ public:
   QtEEventLoadUI(QtEAbstractState *state, const char *src, QWidget *parent = 0);
   virtual ~QtEEventLoadUI();
 
-  bool execute(QtE *qte);
+  void execute(QtE *qte);
 private:
   QWidget *p;
   QIODevice *io;

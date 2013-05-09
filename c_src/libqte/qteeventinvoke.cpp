@@ -29,14 +29,14 @@ QtEEventInvoke::~QtEEventInvoke()
     delete a;
 }
 
-bool QtEEventInvoke::execute(QtE *qte)
+void QtEEventInvoke::execute(QtE *qte)
 {
   QObject *o = qte->findObject(getState(), n);
 
   if (!o)
   {
     getState()->notifyError("object_not_found", n.toLocal8Bit().constData());
-    return true;
+    return;
   }
 
   const QMetaObject *mo = o->metaObject();
@@ -46,7 +46,7 @@ bool QtEEventInvoke::execute(QtE *qte)
     getState()->notifyError("method_not_found",
                             mo->className(),
                             m.toLocal8Bit().constData());
-    return true;
+    return;
   }
 
   QMetaMethod mm = mo->method(idx);
@@ -68,6 +68,4 @@ bool QtEEventInvoke::execute(QtE *qte)
                             mo->className(),
                             mm.typeName());
   }
-
-  return true;
 }

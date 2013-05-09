@@ -35,7 +35,7 @@ QtEEventLoadUI::~QtEEventLoadUI()
   delete io;
 }
 
-bool QtEEventLoadUI::execute(QtE *qte)
+void QtEEventLoadUI::execute(QtE *qte)
 {
   QWidget *w;
   QUiLoader loader;
@@ -52,6 +52,4 @@ bool QtEEventLoadUI::execute(QtE *qte)
           "load_failed",
           loader.errorString().toLocal8Bit().constData());
   }
-
-  return true;
 }

@@ -37,11 +37,9 @@ QtEAbstractState *QtEEvent::releaseState()
   return ret;
 }
 
-bool QtEEvent::execute(QtE *qte)
+void QtEEvent::execute(QtE *qte)
 {
   (void) qte;
-
-  return false;
 }
 
 int QtEEvent::event_type = 0;

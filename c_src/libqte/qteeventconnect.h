@@ -26,7 +26,7 @@ class QtEEventConnect : public QtEEvent
 public:
   explicit QtEEventConnect(QtEAbstractState *state, const char *name, const char *signal);
   
-  bool execute(QtE *qte);
+  void execute(QtE *qte);
 
 private:
   QString n;

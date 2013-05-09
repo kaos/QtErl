@@ -30,7 +30,7 @@ public:
                           const char *method,
                           QtEArgumentList *args);
   virtual ~QtEEventInvoke();
-  bool execute(QtE *qte);
+  void execute(QtE *qte);
 private:
   QString n;
   QString m;

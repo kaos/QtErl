@@ -30,7 +30,7 @@ public:
 
   QtEAbstractState *getState() const { return os; }
   QtEAbstractState *releaseState();
-  virtual bool execute(QtE *qte);
+  virtual void execute(QtE *qte);
 private:
   QtEAbstractState *os;
 

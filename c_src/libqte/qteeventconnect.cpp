@@ -22,7 +22,7 @@ QtEEventConnect::QtEEventConnect(QtEAbstractState *state, const char *name, cons
 {
 }
 
-bool QtEEventConnect::execute(QtE *qte)
+void QtEEventConnect::execute(QtE *qte)
 {
   QtEAbstractState *state = getState();
   QString signal = QT_STRINGIFY(QSIGNAL_CODE) + s;
@@ -46,6 +46,4 @@ bool QtEEventConnect::execute(QtE *qte)
       n.toLocal8Bit().constData(),
       s.toLocal8Bit().constData());
   }
-
-  return true;
 }
