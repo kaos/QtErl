@@ -66,16 +66,16 @@ void Generator::generateCode()
     << "  " << cdef->classname << " *obj;" << endl
     << "};" << endl << endl
 
-    << "QtErlProxy_" << cdef->classname << " *newProxyObject(" << cdef->classname << " *obj)" << endl
+    << "QtErlProxy_" << cdef->classname << " *newProxyObject(" << cdef->classname << " *obj, QObject *owner = 0)" << endl
     << "#ifdef PROXY_IMPLEMENTATION" << endl
     << "{" << endl
-    << "  return new QtErlProxy_" << cdef->classname << "(obj);" << endl
+    << "  return new QtErlProxy_" << cdef->classname << "(owner, obj);" << endl
     << "}" << endl
 
     << "struct QtErlProxy_" << cdef->classname << "Factory : public QtErlProxyFactory" << endl
     << "{" << endl
-    << "  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<"
-    << cdef->classname << ">(obj); }" << endl
+    << "  QObject *newProxyObject(QObject *obj, QObject *owner) { return tryNewProxyObject<"
+    << cdef->classname << ">(obj, owner); }" << endl
     << "} QtErlProxy_" << cdef->classname << "FactoryInstance;" << endl
     << "#else" << endl
     << ";" << endl

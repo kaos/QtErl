@@ -23,48 +23,14 @@ QteObjectProxy::QteObjectProxy()
 }
 
 template<>
-QObject *QteObjectProxy::newProxyObject<QObject>(QObject *obj)
+QObject *QteObjectProxy::newProxyObject<QObject>(QObject *obj, QObject *owner)
 {
   foreach (QtErlProxyFactory *f, QtErlProxyFactory::factories)
   {
-    QObject *p = f->newProxyObject(obj);
+    QObject *p = f->newProxyObject(obj, owner);
     if (p)
       return p;
   }
 
   return 0;
 }
-
-/*
-template<typename T>
-proxy_id_t QteObjectProxy::addObject(T *obj, QObject *owner)
-{
-  ProxyObject p = oh[obj];
-
-  if (p.obj != obj)
-  {
-    p.id = __next_id++;
-    p.obj = newProxyObject(obj);
-    oh[obj] = ih[p.id] = p;
-  }
-
-  return p.id;
-}
-
-template<typename T>
-T *QteObjectProxy::getObject(proxy_id_t id)
-{
-  if (!ih.contains(id))
-    return 0;
-
-  QObject *obj = ih[id].obj;
-  if (!obj)
-  {
-    // TODO: clean up
-
-    return 0;
-  }
-
-  return dynamic_cast<T *>(obj);
-}
-*/

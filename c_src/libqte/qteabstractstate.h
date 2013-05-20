@@ -33,6 +33,7 @@ public:
   void notifyError(const char *tag = 0, const char *key = 0, const char *value = 0);
 
   virtual void notify(const char *event, const char *tag = 0, const char *key = 0, const char *value = 0) = 0;
+  virtual void notify(const char *event, QVariant const &value) = 0;
   virtual void notify(const char *event, const char *tag, const char *key, QStringList const &value) = 0;
 
 private:

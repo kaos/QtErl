@@ -37,14 +37,14 @@ protected:
   QTableWidgetSelectionRange *obj;
 };
 
-QtErlProxy_QTableWidgetSelectionRange *newProxyObject(QTableWidgetSelectionRange *obj)
+QtErlProxy_QTableWidgetSelectionRange *newProxyObject(QTableWidgetSelectionRange *obj, QObject *owner = 0)
 #ifdef PROXY_IMPLEMENTATION
 {
-  return new QtErlProxy_QTableWidgetSelectionRange(obj);
+  return new QtErlProxy_QTableWidgetSelectionRange(owner, obj);
 }
 struct QtErlProxy_QTableWidgetSelectionRangeFactory : public QtErlProxyFactory
 {
-  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<QTableWidgetSelectionRange>(obj); }
+  QObject *newProxyObject(QObject *obj, QObject *owner) { return tryNewProxyObject<QTableWidgetSelectionRange>(obj, owner); }
 } QtErlProxy_QTableWidgetSelectionRangeFactoryInstance;
 #else
 ;
@@ -103,14 +103,14 @@ protected:
   QTableWidgetItem *obj;
 };
 
-QtErlProxy_QTableWidgetItem *newProxyObject(QTableWidgetItem *obj)
+QtErlProxy_QTableWidgetItem *newProxyObject(QTableWidgetItem *obj, QObject *owner = 0)
 #ifdef PROXY_IMPLEMENTATION
 {
-  return new QtErlProxy_QTableWidgetItem(obj);
+  return new QtErlProxy_QTableWidgetItem(owner, obj);
 }
 struct QtErlProxy_QTableWidgetItemFactory : public QtErlProxyFactory
 {
-  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<QTableWidgetItem>(obj); }
+  QObject *newProxyObject(QObject *obj, QObject *owner) { return tryNewProxyObject<QTableWidgetItem>(obj, owner); }
 } QtErlProxy_QTableWidgetItemFactoryInstance;
 #else
 ;
@@ -177,14 +177,14 @@ protected:
   QTableWidget *obj;
 };
 
-QtErlProxy_QTableWidget *newProxyObject(QTableWidget *obj)
+QtErlProxy_QTableWidget *newProxyObject(QTableWidget *obj, QObject *owner = 0)
 #ifdef PROXY_IMPLEMENTATION
 {
-  return new QtErlProxy_QTableWidget(obj);
+  return new QtErlProxy_QTableWidget(owner, obj);
 }
 struct QtErlProxy_QTableWidgetFactory : public QtErlProxyFactory
 {
-  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<QTableWidget>(obj); }
+  QObject *newProxyObject(QObject *obj, QObject *owner) { return tryNewProxyObject<QTableWidget>(obj, owner); }
 } QtErlProxy_QTableWidgetFactoryInstance;
 #else
 ;

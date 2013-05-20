@@ -73,6 +73,40 @@ void QtErlState::notify(const char *event, const char *tag, const char *key, con
   ei_x_free(&x);
 }
 
+void QtErlState::notify(const char *event, const QVariant &value)
+{
+  ei_x_buff x;
+  ei_x_new_with_version(&x);
+  ei_x_encode_tuple_header(&x, 2);
+  ei_x_encode_atom(&x, event);
+
+  switch ((QMetaType::Type) value.type())
+  {
+    case QMetaType::Bool: ei_x_encode_boolean(&x, value.toBool()); break;
+    case QMetaType::Int: // drop
+    case QMetaType::Short: // drop
+    case QMetaType::Long: ei_x_encode_long(&x, value.toInt()); break;
+    case QMetaType::UInt: // drop
+    case QMetaType::UShort: // drop
+    case QMetaType::ULong: ei_x_encode_ulong(&x, value.toUInt()); break;
+    case QMetaType::LongLong: ei_x_encode_longlong(&x, value.toLongLong()); break;
+    case QMetaType::ULongLong: ei_x_encode_ulonglong(&x, value.toULongLong()); break;
+    case QMetaType::Float: // drop
+    case QMetaType::Double: ei_x_encode_double(&x, value.toDouble()); break;
+    case QMetaType::Char: ei_x_encode_char(&x, value.toChar().toLatin1()); break;
+    case QMetaType::QString:
+      ei_x_encode_string_len(
+            &x,
+            value.toString().toLocal8Bit().constData(),
+            value.toString().length());
+      break;
+    default: ei_x_encode_atom(&x, "undefined"); break;
+  }
+
+  send(&x);
+  ei_x_free(&x);
+}
+
 int QtErlState::send(ei_x_buff *x)
 {
   ei_x_buff *ref = NULL;

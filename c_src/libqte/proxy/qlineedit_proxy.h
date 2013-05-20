@@ -88,14 +88,14 @@ protected:
   QLineEdit *obj;
 };
 
-QtErlProxy_QLineEdit *newProxyObject(QLineEdit *obj)
+QtErlProxy_QLineEdit *newProxyObject(QLineEdit *obj, QObject *owner = 0)
 #ifdef PROXY_IMPLEMENTATION
 {
-  return new QtErlProxy_QLineEdit(obj);
+  return new QtErlProxy_QLineEdit(owner, obj);
 }
 struct QtErlProxy_QLineEditFactory : public QtErlProxyFactory
 {
-  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<QLineEdit>(obj); }
+  QObject *newProxyObject(QObject *obj, QObject *owner) { return tryNewProxyObject<QLineEdit>(obj, owner); }
 } QtErlProxy_QLineEditFactoryInstance;
 #else
 ;

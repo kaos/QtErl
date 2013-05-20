@@ -190,14 +190,14 @@ qte:invoke/4
 ------------
 
 ```erlang
--spec invoke(pid(), Name::string(), Method::string(), Args::list()) -> ok | {error, Reason::term()}.
+-spec invoke(pid(), Name::string(), Method::string(), Args::list()) -> ok | {ok, Result::term()} | {error, Reason::term()}.
 ```
-
-**Note: Return values are not yet supported.**
 
 Invoke method on object. `Method` must be a normalized method a la Qt parlang, e.g. `"click()"` or `"setText(QString)"`.
 Also note that the method has to be [invokable](http://qt-project.org/doc/qt-5.0/qtcore/qobject.html#Q_INVOKABLE) by a [QMetaObject](http://qt-project.org/doc/qt-5.0/qtcore/qmetaobject.html) (i.e. known to the [Qt meta system](http://qt-project.org/doc/qt-5.0/qtcore/metaobjects.html#meta-object-system)).
 That is, `slots` (and `signals`, but those are always protected, so we can't call them) and functions marked with [`Q_INVOKABLE`](http://qt-project.org/doc/qt-5.0/qtcore/qobject.html#Q_INVOKABLE).
+
+Note: the `owc` compiler can create header files for proxy objects to expose all public methods in a class as invokable.
 
 
 qte:compile/1

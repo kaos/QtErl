@@ -30,6 +30,7 @@ public:
 
   void notify(const char *event, const char *tag = 0, const char *key = 0, const char *value = 0);
   void notify(const char *event, const char *tag, const char *key, QStringList const &value);
+  void notify(const char *event, QVariant const &value);
 
 private:
   QtErl *q;

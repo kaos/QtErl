@@ -28,9 +28,9 @@ struct QtErlProxyFactory
   ~QtErlProxyFactory() { factories.removeAll(this); }
 
   template<typename T>
-  QObject *tryNewProxyObject(QObject *obj);
+  QObject *tryNewProxyObject(QObject *obj, QObject *owner = 0);
 
-  virtual QObject *newProxyObject(QObject *obj) = 0;
+  virtual QObject *newProxyObject(QObject *obj, QObject *owner = 0) = 0;
 
 private:
   static QList<QtErlProxyFactory *> factories;
@@ -44,13 +44,13 @@ QList<QtErlProxyFactory *> QtErlProxyFactory::factories;
 #include "proxy/qterlproxy.h"
 
 template<typename T>
-QObject *QtErlProxyFactory::tryNewProxyObject(QObject *obj)
+QObject *QtErlProxyFactory::tryNewProxyObject(QObject *obj, QObject *owner)
 {
   T *t = dynamic_cast<T *>(obj);
   if (!t)
     return 0;
 
-  return ::newProxyObject(t);
+  return ::newProxyObject(t, owner);
 }
 
 typedef unsigned long proxy_id_t;
@@ -61,17 +61,16 @@ public:
   QteObjectProxy();
 
   template<typename T>
-  QObject *newProxyObject(T *obj)
+  QObject *newProxyObject(T *obj, QObject *owner = 0)
   {
-    return ::newProxyObject(obj);
+    return ::newProxyObject(obj, owner);
   }
 
-/*
   template<typename T>
   proxy_id_t addObject(T *obj, QObject *owner = 0);
+
   template<typename T>
   T *getObject(proxy_id_t id);
-*/
 
 private:
   proxy_id_t __next_id;
@@ -86,6 +85,38 @@ private:
 };
 
 template<>
-QObject *QteObjectProxy::newProxyObject<QObject>(QObject *obj);
+QObject *QteObjectProxy::newProxyObject<QObject>(QObject *obj, QObject *owner);
+
+template<typename T>
+proxy_id_t QteObjectProxy::addObject(T *obj, QObject *owner)
+{
+  ProxyObject p = oh[obj];
+
+  if (p.obj != obj)
+  {
+    p.id = __next_id++;
+    p.obj = newProxyObject(obj, owner);
+    oh[obj] = ih[p.id] = p;
+  }
+
+  return p.id;
+}
+
+template<typename T>
+T *QteObjectProxy::getObject(proxy_id_t id)
+{
+  if (!ih.contains(id))
+    return 0;
+
+  QObject *obj = ih[id].obj;
+  if (!obj)
+  {
+    ih.remove(id);
+    // TODO: clear value from oh hash too..
+    return 0;
+  }
+
+  return dynamic_cast<T *>(obj);
+}
 
 #endif // QTEOBJECTPROXY_H

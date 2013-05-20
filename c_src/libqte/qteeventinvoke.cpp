@@ -39,12 +39,12 @@ void QtEEventInvoke::execute(QtE *qte)
     return;
   }
 
-  if (!executeOn(o, false))
+  if (!executeOn(qte, o, false))
   {
     QObject *p = qte->getProxy()->newProxyObject(o);
     if (p)
     {
-      executeOn(p, true);
+      executeOn(qte, p, true);
       delete p;
     }
     else
@@ -52,8 +52,10 @@ void QtEEventInvoke::execute(QtE *qte)
   }
 }
 
-bool QtEEventInvoke::executeOn(QObject *o, bool notify)
+bool QtEEventInvoke::executeOn(QtE *qte, QObject *o, bool notify)
 {
+  (void) qte;
+
   const QMetaObject *mo = o->metaObject();
   int idx = mo->indexOfMethod(m.toLocal8Bit().constData());
   if (-1 == idx)
@@ -73,43 +75,70 @@ bool QtEEventInvoke::executeOn(QObject *o, bool notify)
       qa[i] = a->value(i, NULL);
 
   bool invoked = false;
-  bool got_res = true;
-  QString res;
+  QVariant res;
 
   switch(mm.returnType())
   {
-    case QMetaType::Int:
-      int i;
-      invoked = mm.invoke(o, Q_RETURN_ARG(int, i), ARGS(qa));
-      // FIXME: should support returning more than only strings
-      res.setNum(i);
-      break;
+    case QMetaType::Bool: invoked = INVOKE(bool, mm, o, qa, res); break;
+    case QMetaType::Int: invoked = INVOKE(int, mm, o, qa, res); break;
+    case QMetaType::Short: invoked = INVOKE(short, mm, o, qa, res); break;
+    case QMetaType::Long: invoked = INVOKE(long, mm, o, qa, res); break;
+    case QMetaType::UInt: invoked = INVOKE(unsigned int, mm, o, qa, res); break;
+    case QMetaType::UShort: invoked = INVOKE(unsigned short, mm, o, qa, res); break;
+    case QMetaType::ULong: invoked = INVOKE(unsigned long, mm, o, qa, res); break;
+    case QMetaType::LongLong: invoked = INVOKE(long long, mm, o, qa, res); break;
+    case QMetaType::ULongLong: invoked = INVOKE(unsigned long long, mm, o, qa, res); break;
+    case QMetaType::Float: invoked = INVOKE(float, mm, o, qa, res); break;
+    case QMetaType::Double: invoked = INVOKE(double, mm, o, qa, res); break;
+    case QMetaType::Char: invoked = INVOKE(char, mm, o, qa, res); break;
+    case QMetaType::QString: invoked = INVOKE(QString, mm, o, qa, res); break;
 
-    case QMetaType::QString:
-      invoked = mm.invoke(o, Q_RETURN_ARG(QString, res), ARGS(qa));
-      break;
-
+    case QMetaType::UnknownType:
+      {
+        if (!QString(mm.typeName()).endsWith('*'))
+        {
+          // ignore return value
+          invoked = mm.invoke(o, ARGS(qa));
+          break;
+        }
+      }
+    case QMetaType::VoidStar:
+      /*void *ptr;
+      invoked = mm.invoke(o, Q_RETURN_ARG(void *, ptr), ARGS(qa));
+      // need to cast void * to proper class (or any class, really)
+      res.setValue(qte->getProxy()->addObject(ptr, o));
+      break;*/
     case QMetaType::Void:
       // drop to default, i.e. ignore result
     default:
       invoked = mm.invoke(o, ARGS(qa));
-      got_res = false;
       break;
   }
 
   if (invoked)
   {
-    if (got_res)
-      getState()->notifyOK(res.toLocal8Bit().constData());
-    else
+    if (res.isNull())
       getState()->notifyOK();
+    else
+      getState()->notify("ok", res);
   }
   else
   {
     getState()->notifyError("invoke_failed",
                             mo->className(),
-                            mm.typeName());
+                            mm.name().constData());
   }
 
+  return true;
+}
+
+template<typename T>
+bool QtEEventInvoke::invokeOnObjWithArgs(QMetaMethod &method, QObject *obj, QtEArgument *args[10], QVariant &result, const char *resultType)
+{
+  T ret;
+  if (!method.invoke(obj, QReturnArgument<T>(resultType, ret), ARGS(args)))
+    return false;
+
+  result.setValue(ret);
   return true;
 }
