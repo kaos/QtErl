@@ -208,3 +208,14 @@ qte:compile/1
 ```
 
 Take a user interface struct and compile it to the XML format understood by the Qt form builder.
+
+
+Proxy Objects
+=============
+
+Some dev notes on how to (re)generate the proxy header files in `libqte/proxy/`:
+
+``owc -p . -o <output filename> <input filename>``
+
+TODO: make this automagic as a optional build step. Also, apply patches to produced proxy files.
+Currently, the `qlineedit_proxy.h` file needs a couple of `QLineEdit::` prepended to the `EchoMode` type.
