@@ -24,17 +24,15 @@ struct start_args
 {
   int argc;
   char **argv;
-  ErlDrvCond *cond;
-  QtE **qte;
 };
 
-static void *qterl_main_thread(void *);
+void *qterl_main_thread(void *args);
 
 ErlDrvTid QtErl::main_thread;
 ErlDrvCond *QtErl::cond;
 ErlDrvMutex *QtErl::mutex;
 QtE *QtErl::qte;
-unsigned long QtErl::__counter;
+QtEStateId QtErl::__counter;
 
 QtErl::QtErl(ErlDrvPort port) :
   dp(port), id(__counter++)
@@ -87,17 +85,17 @@ void QtErl::operator delete(void *ptr) throw()
 QtErlState *QtErl::new_state()
 {
   ei_x_buff *ref = r.buff ? &r : 0;
-  return new QtErlState(id, dp, ref);
+  return new QtErlState(this, ref);
 }
 
 void QtErl::LoadUI(const char *src, const char *parent)
 {
+  QtErlState *s = new_state();
   QApplication::postEvent(
         qte,
         new QtEEventLoadUI(
-          new_state(),
-          src,
-          parent ? qte->findWidget(id, parent) : 0));
+          s, src,
+          parent ? qte->findWidget(s, parent) : 0));
 }
 
 void QtErl::Connect(const char *name, const char *signal)
@@ -146,8 +144,6 @@ int QtErl::init(int argc, char **argv)
 
   a.argc = argc;
   a.argv = argv;
-  a.qte = &qte;
-  a.cond = cond;
 
   return erl_drv_thread_create(
         argv[0],
@@ -166,15 +162,15 @@ void QtErl::close()
   erl_drv_mutex_destroy(mutex);
 }
 
-static void *qterl_main_thread(void *args)
+void *qterl_main_thread(void *args)
 {
   struct start_args *a = (struct start_args *)args;
 
   QApplication app(a->argc, a->argv);
   app.setQuitOnLastWindowClosed(false);
 
-  *(a->qte) = new QtE(&app);
-  erl_drv_cond_broadcast(a->cond);
+  QtErl::qte = new QtE(&app);
+  erl_drv_cond_broadcast(QtErl::cond);
 
   return (void *)app.exec();
 }

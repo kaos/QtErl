@@ -20,16 +20,19 @@
 #include "qteabstractstate.h"
 #include "qterl_drv.h"
 
+class QtErl;
+
 class QtErlState : public QtEAbstractState
 {
 public:
-  QtErlState(QtEStateId state_id, ErlDrvPort port, ei_x_buff *ref);
+  QtErlState(QtErl *qterl, ei_x_buff *ref);
+  virtual ~QtErlState();
 
   void notify(const char *event, const char *tag = 0, const char *key = 0, const char *value = 0);
   void notify(const char *event, const char *tag, const char *key, QStringList const &value);
 
 private:
-  ErlDrvPort dp;
+  QtErl *q;
   ei_x_buff r;
 
   int send(ei_x_buff *x);

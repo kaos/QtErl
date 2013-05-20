@@ -22,9 +22,13 @@
 #include "qterl_drv.h"
 #include "qterlstate.h"
 #include "qteargument.h"
+#include "qteobjectproxy.h"
 
 class QtErl
 {
+  friend class QtErlState;
+  friend void *qterl_main_thread(void *);
+
 public:
   QtErl(ErlDrvPort port);
   virtual ~QtErl();
@@ -48,6 +52,7 @@ private:
   ErlDrvPort dp;
   ei_x_buff r;
   QtEStateId id;
+  QteObjectProxy op;
 
   static ErlDrvTid main_thread;
   static ErlDrvCond *cond;

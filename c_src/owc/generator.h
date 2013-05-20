@@ -55,7 +55,8 @@ public:
     Generator(ClassDef *classDef, const QList<QByteArray> &metaTypes, const QSet<QByteArray> &knownQObjectClasses, FILE *outfile = 0);
     void generateCode();
 private:
-    QString generateSlotsFromMethods();
+    QString generateConstructors();
+    QString generateMethods();
     int generateFunction(QTextStream &s, FunctionDef &f, int num_defaults = 0);
 #if 0
     bool registerableMetaType(const QByteArray &propertyType);

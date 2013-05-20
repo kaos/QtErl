@@ -14,16 +14,21 @@
  *  limitations under the License.
  */
 
-#include "qterlstate.h"
+#include "qterl.h"
 
-QtErlState::QtErlState(QtEStateId state_id, ErlDrvPort port, ei_x_buff *ref) :
-  QtEAbstractState(state_id), dp(port)
+QtErlState::QtErlState(QtErl *qterl, ei_x_buff *ref) :
+  QtEAbstractState(qterl->id), q(qterl)
 {
   if (ref)
   {
     ei_x_new(&r);
     ei_x_append(&r, ref);
   }
+}
+
+QtErlState::~QtErlState()
+{
+  ei_x_free(&r);
 }
 
 void QtErlState::notify(const char *event, const char *tag, const char *key, const char *value)
@@ -86,7 +91,7 @@ int QtErlState::send(ei_x_buff *x)
   };
 
   return driver_send_term(
-        dp, driver_connected(dp),
+        q->dp, driver_connected(q->dp),
         &term[ref ? 0 : 3], ref ? 8 : 3
       );
 }

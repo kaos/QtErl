@@ -15,8 +15,8 @@
  */
 
 #include <qmetaobject.h>
-//#include <qmetatype.h>
 #include "qteeventinvoke.h"
+#include "qteobjectproxy.h"
 
 QtEEventInvoke::QtEEventInvoke(QtEAbstractState *state, const char *name, const char *method, QtEArgumentList *args)
   : QtEEvent(state), n(name), m(method), a(args)
@@ -39,14 +39,30 @@ void QtEEventInvoke::execute(QtE *qte)
     return;
   }
 
+  if (!executeOn(o, false))
+  {
+    QObject *p = qte->getProxy()->newProxyObject(o);
+    if (p)
+    {
+      executeOn(p, true);
+      delete p;
+    }
+    else
+      getState()->notifyError("no_proxy_for", o->metaObject()->className());
+  }
+}
+
+bool QtEEventInvoke::executeOn(QObject *o, bool notify)
+{
   const QMetaObject *mo = o->metaObject();
   int idx = mo->indexOfMethod(m.toLocal8Bit().constData());
   if (-1 == idx)
   {
-    getState()->notifyError("method_not_found",
-                            mo->className(),
-                            m.toLocal8Bit().constData());
-    return;
+    if (notify)
+      getState()->notifyError("method_not_found",
+                              mo->className(),
+                              m.toLocal8Bit().constData());
+    return false;
   }
 
   QMetaMethod mm = mo->method(idx);
@@ -56,11 +72,37 @@ void QtEEventInvoke::execute(QtE *qte)
     for (int i = 0; i < 10; i++)
       qa[i] = a->value(i, NULL);
 
-  if (mm.invoke(o,
-        QTE_Q_ARG(qa[0]), QTE_Q_ARG(qa[1]), QTE_Q_ARG(qa[2]), QTE_Q_ARG(qa[3]), QTE_Q_ARG(qa[4]),
-        QTE_Q_ARG(qa[5]), QTE_Q_ARG(qa[6]), QTE_Q_ARG(qa[7]), QTE_Q_ARG(qa[8]), QTE_Q_ARG(qa[9])))
+  bool invoked = false;
+  bool got_res = true;
+  QString res;
+
+  switch(mm.returnType())
   {
-    getState()->notifyOK();
+    case QMetaType::Int:
+      int i;
+      invoked = mm.invoke(o, Q_RETURN_ARG(int, i), ARGS(qa));
+      // FIXME: should support returning more than only strings
+      res.setNum(i);
+      break;
+
+    case QMetaType::QString:
+      invoked = mm.invoke(o, Q_RETURN_ARG(QString, res), ARGS(qa));
+      break;
+
+    case QMetaType::Void:
+      // drop to default, i.e. ignore result
+    default:
+      invoked = mm.invoke(o, ARGS(qa));
+      got_res = false;
+      break;
+  }
+
+  if (invoked)
+  {
+    if (got_res)
+      getState()->notifyOK(res.toLocal8Bit().constData());
+    else
+      getState()->notifyOK();
   }
   else
   {
@@ -68,4 +110,6 @@ void QtEEventInvoke::execute(QtE *qte)
                             mo->className(),
                             mm.typeName());
   }
+
+  return true;
 }

@@ -50,18 +50,47 @@ QList<QObject *> QtE::getObjects(QtEStateId id)
 template<typename T>
 T QtE::find(QtEStateId id, const QString &name)
 {
+  Qt::FindChildOption opt = Qt::FindChildrenRecursively;
+  QStringList path = name.split('/');
+
+  while (!path.first().size())
+  {
+    opt = Qt::FindDirectChildrenOnly;
+    path.pop_front();
+  }
+
   foreach (QObject *o, getObjects(id))
   {
     T t = dynamic_cast<T>(o);
-    if (t && (name == o->objectName()))
+    if (t &&
+        opt == Qt::FindDirectChildrenOnly &&
+        (path.first() == o->objectName()))
       return t;
 
-    t = o->findChild<T>(name);
+    foreach (QString p, path)
+    {
+      if (!p.size())
+      {
+        opt = Qt::FindChildrenRecursively;
+        continue;
+      }
+
+      t = o->findChild<T>(p, opt);
+      if (t)
+      {
+        o = dynamic_cast<QObject *>(t);
+        if (!o)
+          break;
+      }
+
+      opt = Qt::FindDirectChildrenOnly;
+    }
+
     if (t)
       return t;
   }
 
-  return NULL;
+  return 0;
 }
 
 QObject *QtE::findObject(QtEStateId id, const QString &name)

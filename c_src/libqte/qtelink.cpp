@@ -47,12 +47,12 @@ bool QtELink::connect(QtEAbstractState *state, QObject *sender, const char *sign
 void QtELink::send_signal()
 {
   s->notify("signal", parent()->objectName().toLocal8Bit().constData(),
-             sig_name.toLocal8Bit().constData());
+            sig_name.toLocal8Bit().constData());
 }
 
 void QtELink::send_signal(QString str)
 {
   s->notify("signal", parent()->objectName().toLocal8Bit().constData(),
-             sig_name.toLocal8Bit().constData(),
-             QStringList() << str);
+            sig_name.toLocal8Bit().constData(),
+            QStringList() << str);
 }

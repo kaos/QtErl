@@ -20,6 +20,7 @@
 #include <qobject.h>
 #include <qhash.h>
 #include "qteabstractstate.h"
+#include "qteobjectproxy.h"
 
 class QtE : public QObject
 {
@@ -62,8 +63,11 @@ public:
   void customEvent(QEvent *event);
   void loaded(QWidget *widget, QtEAbstractState *state);
 
+  QteObjectProxy *getProxy() { return &proxy; }
+
 private:
   QMultiHash<QtEStateId, QObject *> root;
+  QteObjectProxy proxy;
 };
 
 #endif // QTE_H

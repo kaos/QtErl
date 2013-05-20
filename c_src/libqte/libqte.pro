@@ -10,6 +10,8 @@ CONFIG += staticlib
 
 QT += widgets uitools
 
+include(proxy/proxy.pri)
+
 SOURCES += qte.cpp \
     qtelink.cpp \
     qteevent.cpp \
@@ -17,7 +19,8 @@ SOURCES += qte.cpp \
     qteeventconnect.cpp \
     qteeventinvoke.cpp \
     qteabstractstate.cpp \
-    qteargument.cpp
+    qteargument.cpp \
+    qteobjectproxy.cpp
 
 HEADERS += qte.h \
     qtelink.h \
@@ -26,7 +29,8 @@ HEADERS += qte.h \
     qteeventconnect.h \
     qteeventinvoke.h \
     qteabstractstate.h \
-    qteargument.h
+    qteargument.h \
+    qteobjectproxy.h
 unix:!symbian {
     maemo5 {
         target.path = /opt/usr/lib
@@ -35,3 +39,6 @@ unix:!symbian {
     }
     INSTALLS += target
 }
+
+OTHER_FILES += \
+    wrap/wrap.pri

@@ -533,6 +533,23 @@ bool Owc::parseMaybeFunction(const ClassDef *cdef, FunctionDef *def)
             return false;
     }
     def->isConst = test(CONST);
+
+    while (test(IDENTIFIER))
+        ;
+
+    if (test(THROW)) {
+        next(LPAREN);
+        until(RPAREN);
+    }
+    if (test(SEMIC))
+        ;
+    else if ((def->inlineCode = test(LBRACE)))
+        until(RBRACE);
+    else if ((def->isAbstract = test(EQ)))
+        until(SEMIC);
+    else
+        return false;
+
     if (scopedFunctionName
         && (def->isSignal || def->isSlot || def->isInvokable)) {
         QByteArray msg("parsemaybe: Function declaration ");
@@ -778,7 +795,7 @@ void Owc::parse()
             }
 
             next(RBRACE);
-
+#if 0
             if (!def.hasQObject && !def.hasQGadget && def.signalList.isEmpty() && def.slotList.isEmpty()
                 && def.propertyList.isEmpty() && def.enumDeclarations.isEmpty())
                 continue; // no meta object code required
@@ -786,7 +803,7 @@ void Owc::parse()
 
             if (!def.hasQObject && !def.hasQGadget)
                 error("Class declarations lacks Q_OBJECT macro.");
-
+#endif
             checkSuperClasses(&def);
             checkProperties(&def);
 

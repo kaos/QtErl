@@ -31,10 +31,18 @@ public:
                           QtEArgumentList *args);
   virtual ~QtEEventInvoke();
   void execute(QtE *qte);
+
+protected:
+  bool executeOn(QObject *o, bool notify);
+
 private:
   QString n;
   QString m;
   QtEArgumentList *a;
 };
+
+#define ARGS(_a_) \
+  QTE_Q_ARG(_a_[0]), QTE_Q_ARG(_a_[1]), QTE_Q_ARG(_a_[2]), QTE_Q_ARG(_a_[3]), QTE_Q_ARG(_a_[4]), \
+  QTE_Q_ARG(_a_[5]), QTE_Q_ARG(_a_[6]), QTE_Q_ARG(_a_[7]), QTE_Q_ARG(_a_[8]), QTE_Q_ARG(_a_[9])
 
 #endif // QTEEVENTINVOKE_H

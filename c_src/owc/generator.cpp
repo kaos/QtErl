@@ -58,22 +58,51 @@ void Generator::generateCode()
   QTextStream(&str)
     << "class QtErlProxy_" << cdef->classname << " : public QObject" << endl
     << "{" << endl
-    << "Q_OBJECT" << endl
-    << "public slots:" << endl
-    << generateSlotsFromMethods()
+    << "  Q_OBJECT" << endl << endl
     << "public:" << endl
-    << "  QtErlProxy_" << cdef->classname << "(" << cdef->classname << " *ref) : QObject(), obj(ref) {}" << endl
+    << generateConstructors() << endl
+    << generateMethods() << endl
     << "protected:" << endl
     << "  " << cdef->classname << " *obj;" << endl
-    << "};" << endl
-    << "QObject getProxyObject(" << cdef->classname << " *obj) { return QtErlProxy_"
-    << cdef->classname << "(obj); }" << endl
+    << "};" << endl << endl
+
+    << "QtErlProxy_" << cdef->classname << " *newProxyObject(" << cdef->classname << " *obj)" << endl
+    << "#ifdef PROXY_IMPLEMENTATION" << endl
+    << "{" << endl
+    << "  return new QtErlProxy_" << cdef->classname << "(obj);" << endl
+    << "}" << endl
+
+    << "struct QtErlProxy_" << cdef->classname << "Factory : public QtErlProxyFactory" << endl
+    << "{" << endl
+    << "  QObject *newProxyObject(QObject *obj) { return tryNewProxyObject<"
+    << cdef->classname << ">(obj); }" << endl
+    << "} QtErlProxy_" << cdef->classname << "FactoryInstance;" << endl
+    << "#else" << endl
+    << ";" << endl
+    << "#endif" << endl
     << endl;
 
   fprintf(out, str.toLocal8Bit().constData());
 }
 
-QString Generator::generateSlotsFromMethods()
+QString Generator::generateConstructors()
+{
+  QString res;
+  QTextStream s(&res);
+
+  s << "  QtErlProxy_" << cdef->classname << "(QObject *parent, " << cdef->classname << " *ref)"
+    << " : QObject(parent), obj(ref) {}" << endl
+
+    << "  QtErlProxy_" << cdef->classname << "(" << cdef->classname << " *ref)"
+    << " : QObject(), obj(ref) {}" << endl
+
+    << "  //QtErlProxy_" << cdef->classname << "(const QtErlProxy_" << cdef->classname << " &copy)"
+    << " : QObject(copy.parent()), obj(copy.obj) {}" << endl;
+
+  return res;
+}
+
+QString Generator::generateMethods()
 {
   QString res;
   QTextStream s(&res);
@@ -93,7 +122,7 @@ int Generator::generateFunction(QTextStream &s, FunctionDef &f, int num_defaults
 {
   int a, d;
 
-  s << "  ";
+  s << "  Q_INVOKABLE ";
   if (f.isStatic)
     s << "/* static */ "; // alas, the meta object system doesn't support static slots
   if (f.tag.length())
@@ -118,7 +147,10 @@ int Generator::generateFunction(QTextStream &s, FunctionDef &f, int num_defaults
     s << arg.type.name;
     if (!arg.type.referenceType)
       s << " ";
-    s << arg.name;
+    if (arg.name.size())
+      s << arg.name;
+    else
+      s << (char)('A' + a);
   }
 
   s << ") { ";
@@ -143,7 +175,10 @@ int Generator::generateFunction(QTextStream &s, FunctionDef &f, int num_defaults
 
     if (a)
       s << ", ";
-    s << f.arguments.at(a).name;
+    if (arg.name.size())
+      s << arg.name;
+    else
+      s << (char)('A' + a);
   }
   s << "); }" << endl;
 
