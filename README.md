@@ -219,3 +219,7 @@ Some dev notes on how to (re)generate the proxy header files in `libqte/proxy/`:
 
 TODO: make this automagic as a optional build step. Also, apply patches to produced proxy files.
 Currently, the `qlineedit_proxy.h` file needs a couple of `QLineEdit::` prepended to the `EchoMode` type.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/kaos/qterl/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
